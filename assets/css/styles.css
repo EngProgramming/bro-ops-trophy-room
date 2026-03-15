@@ -205,7 +205,7 @@ h1 {
 
 .stat-value {
   margin: 0.35rem 0 0;
-  font-size: 1.2rem;
+  font-size: 1.45rem;
   font-weight: 600;
 }
 
@@ -331,23 +331,6 @@ h1 {
   background: #151a22;
 }
 
-.empty-state {
-  margin-top: 1.5rem;
-  border: 1px dashed #3b4558;
-  border-radius: var(--radius-md);
-  background: linear-gradient(145deg, rgba(139, 168, 255, 0.08), rgba(17, 20, 26, 0.85));
-  padding: 1.2rem;
-}
-
-.empty-state h3 {
-  margin-bottom: 0.4rem;
-}
-
-.empty-state p {
-  margin: 0;
-  color: var(--text-soft);
-}
-
 /* About */
 .about-placeholder {
   margin-top: 1.2rem;
@@ -410,11 +393,6 @@ h1 {
   background: #0f141d;
   padding: 1.2rem;
   box-shadow: var(--shadow);
-}
-
-.modal-content:focus {
-  outline: 2px solid rgba(139, 168, 255, 0.45);
-  outline-offset: 2px;
 }
 
 .modal-close {

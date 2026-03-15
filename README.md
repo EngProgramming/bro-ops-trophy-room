@@ -30,12 +30,7 @@ The site reads game content from JSON and currently expects:
 - `completed_games`: array of finished entries
 - `to_play_games`: array of planned entries
 
-Each game entry should include a canonical `status` field in addition to category-specific fields.
-
-- Example completed status: `Completed`
-- Example to-play status: `High Priority`, `Queued`, `Paused`
-
-Keep field names consistent when adding new games so filters, stats, cards, and modal views continue to work.
+Each object includes metadata used in cards, stats, filters, and modal details. Keep field names consistent when adding new games.
 
 ## Adding cover art
 
@@ -55,8 +50,7 @@ Keep field names consistent when adding new games so filters, stats, cards, and 
 1. Open `data/games.json`.
 2. Replace placeholder game objects with real entries.
 3. Preserve array structure and required fields for each category.
-4. Ensure each object has a `status` value appropriate to its category.
-5. Save and refresh the page—cards, stats, and modal content update from JSON automatically.
+4. Save and refresh the page—cards, stats, and modal content update from JSON automatically.
 
 ## GitHub Pages deployment note
 
