@@ -30,6 +30,10 @@ function formatDisplayDate(rawDate) {
   });
 }
 
+function pluralize(count, singular, plural = `${singular}s`) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
 function buildPlatformBreakdown(completed, planned) {
   const platformCounts = {};
 
@@ -96,20 +100,20 @@ function calculateStats(data) {
 function renderStats(stats) {
   const statGrid = document.getElementById("stats-grid");
   const items = [
-    { label: "Completed games", value: stats.totalCompleted },
-    { label: "Planned games", value: stats.totalPlanned },
+    { label: "Completed games", value: stats.totalCompleted, featured: true },
+    { label: "Planned games", value: stats.totalPlanned, featured: true },
+    { label: "Total tracked hours", value: `${stats.totalTrackedHours}h`, featured: true },
+    { label: "Average rating", value: stats.averageRating, featured: true },
     { label: "Completed logged hours", value: `${stats.completedHours}h` },
     { label: "Planned estimated hours", value: `${stats.plannedHours}h` },
-    { label: "Total tracked hours", value: `${stats.totalTrackedHours}h` },
-    { label: "Platforms", value: stats.platformBreakdown, compact: true },
-    { label: "Average rating", value: stats.averageRating },
-    { label: "Year-by-year", value: stats.yearByYear, compact: true }
+    { label: "Platforms", value: stats.platformBreakdown, compact: true, detail: true },
+    { label: "Year-by-year", value: stats.yearByYear, compact: true, detail: true }
   ];
 
   statGrid.innerHTML = items
     .map(
       (item) => `
-      <article class="stat-card">
+      <article class="stat-card${item.featured ? " stat-card--featured" : ""}${item.detail ? " stat-card--detail" : ""}">
         <p class="stat-label">${item.label}</p>
         <p class="stat-value${item.compact ? " stat-value-compact" : ""}">${item.value}</p>
       </article>
@@ -118,8 +122,8 @@ function renderStats(stats) {
     .join("");
 
   document.getElementById("hero-callouts").innerHTML = `
-    <span class="callout-pill">${stats.totalCompleted} completed run</span>
-    <span class="callout-pill">${stats.totalPlanned} game queued</span>
+    <span class="callout-pill">${pluralize(stats.totalCompleted, "completed run")}</span>
+    <span class="callout-pill">${pluralize(stats.totalPlanned, "queued game")}</span>
   `;
 }
 
@@ -246,11 +250,11 @@ function renderCompletedGames(games) {
             <h3>${game.title}</h3>
             <span class="rating-chip">★ ${game.rating}</span>
           </div>
-          <div class="card-meta">
-            <span>${game.platform}</span>
-            <span>Finished ${formatDisplayDate(game.finish_date)}</span>
-            <span>${game.total_playtime_hours}h logged</span>
-          </div>
+          <dl class="card-meta">
+            <div class="meta-item"><dt>Platform</dt><dd>${game.platform}</dd></div>
+            <div class="meta-item"><dt>Finished</dt><dd>${formatDisplayDate(game.finish_date)}</dd></div>
+            <div class="meta-item"><dt>Playtime</dt><dd>${game.total_playtime_hours}h logged</dd></div>
+          </dl>
           <div class="tags">${tagMarkup(game.tags)}</div>
         </div>
       </button>
@@ -282,11 +286,11 @@ function renderPlannedGames(games) {
             <h3>${game.title}</h3>
             <span class="priority-chip">${game.priority} priority</span>
           </div>
-          <div class="card-meta">
-            <span>${game.target_platform}</span>
-            <span>Estimated ${game.estimated_playtime_hours}h</span>
-            <span>Status: ${game.status}${game.backlog_status ? ` (${game.backlog_status})` : ""}</span>
-          </div>
+          <dl class="card-meta">
+            <div class="meta-item"><dt>Target platform</dt><dd>${game.target_platform}</dd></div>
+            <div class="meta-item"><dt>Estimated time</dt><dd>${game.estimated_playtime_hours}h</dd></div>
+            <div class="meta-item"><dt>Status</dt><dd>${game.status}${game.backlog_status ? ` (${game.backlog_status})` : ""}</dd></div>
+          </dl>
           <div class="tags">${tagMarkup(game.tags)}</div>
         </div>
       </button>
