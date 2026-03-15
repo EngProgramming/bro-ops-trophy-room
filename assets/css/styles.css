@@ -209,6 +209,13 @@ h1 {
   font-weight: 600;
 }
 
+
+.stat-value-compact {
+  font-size: 1rem;
+  line-height: 1.35;
+  font-weight: 500;
+}
+
 /* Controls */
 .controls {
   margin-top: 1.8rem;
@@ -329,6 +336,25 @@ h1 {
   color: #d0d8e8;
   padding: 0.18rem 0.5rem;
   background: #151a22;
+}
+
+
+.empty-state {
+  grid-column: 1 / -1;
+  border: 1px dashed #3a4558;
+  border-radius: var(--radius-md);
+  background: linear-gradient(145deg, rgba(139, 168, 255, 0.08), rgba(17, 20, 26, 0.75));
+  padding: 1.2rem;
+}
+
+.empty-state h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.empty-state p {
+  margin: 0.45rem 0 0;
+  color: var(--text-soft);
 }
 
 /* About */

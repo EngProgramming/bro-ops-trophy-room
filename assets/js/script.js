@@ -7,6 +7,50 @@ async function loadGameData() {
   return response.json();
 }
 
+function normalizeText(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase();
+}
+
+function formatDisplayDate(rawDate) {
+  if (!rawDate) {
+    return "Unknown";
+  }
+
+  const parsedDate = new Date(`${rawDate}T00:00:00`);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return rawDate;
+  }
+
+  return parsedDate.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric"
+  });
+}
+
+function buildPlatformBreakdown(completed, planned) {
+  const platformCounts = {};
+
+  completed.forEach((item) => {
+    const platform = item.platform;
+    if (!platform) return;
+    platformCounts[platform] = (platformCounts[platform] || 0) + 1;
+  });
+
+  planned.forEach((item) => {
+    const platform = item.target_platform;
+    if (!platform) return;
+    platformCounts[platform] = (platformCounts[platform] || 0) + 1;
+  });
+
+  return Object.entries(platformCounts)
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([platform, count]) => `${platform} (${count})`)
+    .join(" • ");
+}
+
 // Stats calculation
 function calculateStats(data) {
   const completed = data.completed_games;
@@ -17,11 +61,9 @@ function calculateStats(data) {
 
   const completedHours = completed.reduce((sum, item) => sum + Number(item.total_playtime_hours || 0), 0);
   const plannedHours = planned.reduce((sum, item) => sum + Number(item.estimated_playtime_hours || 0), 0);
-  const totalCombinedHours = completedHours + plannedHours;
+  const totalTrackedHours = completedHours + plannedHours;
 
-  const completedPlatforms = new Set(completed.map((item) => item.platform));
-  const plannedPlatforms = new Set(planned.map((item) => item.target_platform));
-  const platformCount = new Set([...completedPlatforms, ...plannedPlatforms]).size;
+  const platformBreakdown = buildPlatformBreakdown(completed, planned);
 
   const averageRating =
     totalCompleted > 0
@@ -35,14 +77,17 @@ function calculateStats(data) {
   }, {});
 
   const yearByYear = Object.entries(yearTotals)
+    .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([year, count]) => `${year}: ${count}`)
     .join(" • ");
 
   return {
     totalCompleted,
     totalPlanned,
-    totalCombinedHours,
-    platformCount,
+    completedHours,
+    plannedHours,
+    totalTrackedHours,
+    platformBreakdown: platformBreakdown || "No platform data yet",
     averageRating,
     yearByYear: yearByYear || "No completed runs yet"
   };
@@ -53,10 +98,12 @@ function renderStats(stats) {
   const items = [
     { label: "Completed games", value: stats.totalCompleted },
     { label: "Planned games", value: stats.totalPlanned },
-    { label: "Combined hours", value: `${stats.totalCombinedHours}h` },
-    { label: "Platforms", value: stats.platformCount },
+    { label: "Completed logged hours", value: `${stats.completedHours}h` },
+    { label: "Planned estimated hours", value: `${stats.plannedHours}h` },
+    { label: "Total tracked hours", value: `${stats.totalTrackedHours}h` },
+    { label: "Platforms", value: stats.platformBreakdown, compact: true },
     { label: "Average rating", value: stats.averageRating },
-    { label: "Year-by-year", value: stats.yearByYear }
+    { label: "Year-by-year", value: stats.yearByYear, compact: true }
   ];
 
   statGrid.innerHTML = items
@@ -64,7 +111,7 @@ function renderStats(stats) {
       (item) => `
       <article class="stat-card">
         <p class="stat-label">${item.label}</p>
-        <p class="stat-value">${item.value}</p>
+        <p class="stat-value${item.compact ? " stat-value-compact" : ""}">${item.value}</p>
       </article>
     `
     )
@@ -89,16 +136,18 @@ function uniqueSingleValues(collection, field) {
 
 function populateSelect(id, values, placeholder) {
   const select = document.getElementById(id);
-  const optionMarkup = values.map((value) => `<option value="${value.toLowerCase()}">${value}</option>`).join("");
+  const optionMarkup = values.map((value) => `<option value="${normalizeText(value)}">${value}</option>`).join("");
   select.innerHTML = `<option value="all">${placeholder}</option>${optionMarkup}`;
 }
 
 function setUpFilterScaffolding(data) {
   populateSelect("completed-genre", uniqueSingleValues(data.completed_games, "genre"), "All genres");
   populateSelect("completed-tag", uniqueValues(data.completed_games, "tags"), "All tags");
+  populateSelect("completed-status", uniqueSingleValues(data.completed_games, "status"), "All status");
 
   populateSelect("planned-genre", uniqueSingleValues(data.to_play_games, "genre"), "All genres");
   populateSelect("planned-tag", uniqueValues(data.to_play_games, "tags"), "All tags");
+  populateSelect("planned-status", uniqueSingleValues(data.to_play_games, "status"), "All status");
 }
 
 function sortByTitle(games, direction) {
@@ -111,20 +160,24 @@ function sortByTitle(games, direction) {
 function applyCompletedFilters(games) {
   const genre = document.getElementById("completed-genre").value;
   const tag = document.getElementById("completed-tag").value;
+  const status = document.getElementById("completed-status").value;
   const playtime = document.getElementById("completed-playtime").value;
   const rating = document.getElementById("completed-rating").value;
   const sort = document.getElementById("completed-sort").value;
 
   let filtered = [...games];
 
-  if (genre !== "all") filtered = filtered.filter((game) => game.genre.toLowerCase() === genre);
-  if (tag !== "all") filtered = filtered.filter((game) => game.tags.map((t) => t.toLowerCase()).includes(tag));
+  if (genre !== "all") filtered = filtered.filter((game) => normalizeText(game.genre) === genre);
+  if (tag !== "all") filtered = filtered.filter((game) => (game.tags || []).map(normalizeText).includes(tag));
+  if (status !== "all") filtered = filtered.filter((game) => normalizeText(game.status) === status);
 
-  if (playtime === "short") filtered = filtered.filter((game) => game.total_playtime_hours < 20);
-  if (playtime === "medium") filtered = filtered.filter((game) => game.total_playtime_hours >= 20 && game.total_playtime_hours <= 50);
-  if (playtime === "long") filtered = filtered.filter((game) => game.total_playtime_hours > 50);
+  if (playtime === "short") filtered = filtered.filter((game) => Number(game.total_playtime_hours) < 20);
+  if (playtime === "medium") {
+    filtered = filtered.filter((game) => Number(game.total_playtime_hours) >= 20 && Number(game.total_playtime_hours) <= 50);
+  }
+  if (playtime === "long") filtered = filtered.filter((game) => Number(game.total_playtime_hours) > 50);
 
-  if (rating !== "all") filtered = filtered.filter((game) => game.rating >= Number(rating));
+  if (rating !== "all") filtered = filtered.filter((game) => Number(game.rating) >= Number(rating));
 
   return sortByTitle(filtered, sort);
 }
@@ -132,33 +185,55 @@ function applyCompletedFilters(games) {
 function applyPlannedFilters(games) {
   const genre = document.getElementById("planned-genre").value;
   const tag = document.getElementById("planned-tag").value;
+  const status = document.getElementById("planned-status").value;
   const playtime = document.getElementById("planned-playtime").value;
   const priority = document.getElementById("planned-priority").value;
   const sort = document.getElementById("planned-sort").value;
 
   let filtered = [...games];
 
-  if (genre !== "all") filtered = filtered.filter((game) => game.genre.toLowerCase() === genre);
-  if (tag !== "all") filtered = filtered.filter((game) => game.tags.map((t) => t.toLowerCase()).includes(tag));
+  if (genre !== "all") filtered = filtered.filter((game) => normalizeText(game.genre) === genre);
+  if (tag !== "all") filtered = filtered.filter((game) => (game.tags || []).map(normalizeText).includes(tag));
+  if (status !== "all") filtered = filtered.filter((game) => normalizeText(game.status) === status);
 
-  if (playtime === "short") filtered = filtered.filter((game) => game.estimated_playtime_hours < 20);
-  if (playtime === "medium") filtered = filtered.filter(
-    (game) => game.estimated_playtime_hours >= 20 && game.estimated_playtime_hours <= 50
-  );
-  if (playtime === "long") filtered = filtered.filter((game) => game.estimated_playtime_hours > 50);
+  if (playtime === "short") filtered = filtered.filter((game) => Number(game.estimated_playtime_hours) < 20);
+  if (playtime === "medium") {
+    filtered = filtered.filter(
+      (game) => Number(game.estimated_playtime_hours) >= 20 && Number(game.estimated_playtime_hours) <= 50
+    );
+  }
+  if (playtime === "long") filtered = filtered.filter((game) => Number(game.estimated_playtime_hours) > 50);
 
-  if (priority !== "all") filtered = filtered.filter((game) => game.priority.toLowerCase() === priority);
+  if (priority !== "all") filtered = filtered.filter((game) => normalizeText(game.priority) === priority);
 
   return sortByTitle(filtered, sort);
 }
 
 // Rendering
 function tagMarkup(tags) {
-  return tags.map((tag) => `<span class="tag">${tag}</span>`).join("");
+  return (tags || []).map((tag) => `<span class="tag">${tag}</span>`).join("");
+}
+
+function emptyStateMarkup(title, message) {
+  return `
+    <article class="empty-state" aria-live="polite">
+      <h3>${title}</h3>
+      <p>${message}</p>
+    </article>
+  `;
 }
 
 function renderCompletedGames(games) {
   const grid = document.getElementById("completed-grid");
+
+  if (!games.length) {
+    grid.innerHTML = emptyStateMarkup(
+      "No completed matches",
+      "No completed runs match this filter set yet. Try broadening status, playtime, or rating."
+    );
+    return;
+  }
+
   grid.innerHTML = games
     .map(
       (game) => `
@@ -173,7 +248,7 @@ function renderCompletedGames(games) {
           </div>
           <div class="card-meta">
             <span>${game.platform}</span>
-            <span>Finished ${game.finish_date}</span>
+            <span>Finished ${formatDisplayDate(game.finish_date)}</span>
             <span>${game.total_playtime_hours}h logged</span>
           </div>
           <div class="tags">${tagMarkup(game.tags)}</div>
@@ -186,6 +261,15 @@ function renderCompletedGames(games) {
 
 function renderPlannedGames(games) {
   const grid = document.getElementById("planned-grid");
+
+  if (!games.length) {
+    grid.innerHTML = emptyStateMarkup(
+      "No planned matches",
+      "No backlog entries match these filters. Try a different status, priority, or playtime range."
+    );
+    return;
+  }
+
   grid.innerHTML = games
     .map(
       (game) => `
@@ -201,7 +285,7 @@ function renderPlannedGames(games) {
           <div class="card-meta">
             <span>${game.target_platform}</span>
             <span>Estimated ${game.estimated_playtime_hours}h</span>
-            <span>Status: ${game.backlog_status}</span>
+            <span>Status: ${game.status}${game.backlog_status ? ` (${game.backlog_status})` : ""}</span>
           </div>
           <div class="tags">${tagMarkup(game.tags)}</div>
         </div>
@@ -216,6 +300,51 @@ const modal = document.getElementById("game-modal");
 const modalBody = document.getElementById("modal-body");
 const modalClose = document.getElementById("modal-close");
 let lastFocusedElement = null;
+
+function getFocusableModalElements() {
+  if (modal.classList.contains("hidden")) {
+    return [];
+  }
+
+  const focusableSelectors = [
+    "a[href]",
+    "button:not([disabled])",
+    "input:not([disabled])",
+    "select:not([disabled])",
+    "textarea:not([disabled])",
+    '[tabindex]:not([tabindex="-1"])'
+  ];
+
+  return [...modal.querySelectorAll(focusableSelectors.join(","))].filter(
+    (element) => !element.hasAttribute("disabled") && !element.getAttribute("aria-hidden")
+  );
+}
+
+function trapModalFocus(event) {
+  if (event.key !== "Tab" || modal.classList.contains("hidden")) {
+    return;
+  }
+
+  const focusableElements = getFocusableModalElements();
+  if (!focusableElements.length) {
+    event.preventDefault();
+    return;
+  }
+
+  const firstElement = focusableElements[0];
+  const lastElement = focusableElements[focusableElements.length - 1];
+
+  if (event.shiftKey && document.activeElement === firstElement) {
+    event.preventDefault();
+    lastElement.focus();
+    return;
+  }
+
+  if (!event.shiftKey && document.activeElement === lastElement) {
+    event.preventDefault();
+    firstElement.focus();
+  }
+}
 
 function openModal(htmlContent) {
   lastFocusedElement = document.activeElement;
@@ -239,15 +368,16 @@ function completedModalMarkup(game) {
     <h3 id="modal-title" class="modal-title">${game.title}</h3>
     <p class="modal-subtitle">${game.platform} • ${game.genre}</p>
     <div class="modal-grid">
-      <div class="modal-field"><h4>Start date</h4><p>${game.start_date}</p></div>
-      <div class="modal-field"><h4>Finish date</h4><p>${game.finish_date}</p></div>
+      <div class="modal-field"><h4>Status</h4><p>${game.status}</p></div>
+      <div class="modal-field"><h4>Start date</h4><p>${formatDisplayDate(game.start_date)}</p></div>
+      <div class="modal-field"><h4>Finish date</h4><p>${formatDisplayDate(game.finish_date)}</p></div>
       <div class="modal-field"><h4>Total playtime</h4><p>${game.total_playtime_hours}h</p></div>
       <div class="modal-field"><h4>Completion type</h4><p>${game.completion_type}</p></div>
       <div class="modal-field"><h4>Achievements</h4><p>${game.achievements_completed}/${game.achievements_total}</p></div>
       <div class="modal-field"><h4>Rating</h4><p>${game.rating} / 5</p></div>
       <div class="modal-field"><h4>Notes</h4><p>${game.notes}</p></div>
       <div class="modal-field"><h4>Favorite memory</h4><p>${game.favorite_memory}</p></div>
-      <div class="modal-field"><h4>Tags</h4><p>${game.tags.join(", ")}</p></div>
+      <div class="modal-field"><h4>Tags</h4><p>${(game.tags || []).join(", ")}</p></div>
     </div>
   `;
 }
@@ -257,11 +387,12 @@ function plannedModalMarkup(game) {
     <h3 id="modal-title" class="modal-title">${game.title}</h3>
     <p class="modal-subtitle">${game.target_platform} • ${game.genre}</p>
     <div class="modal-grid">
-      <div class="modal-field"><h4>Estimated playtime</h4><p>${game.estimated_playtime_hours}h</p></div>
+      <div class="modal-field"><h4>Status</h4><p>${game.status}</p></div>
       <div class="modal-field"><h4>Priority</h4><p>${game.priority}</p></div>
-      <div class="modal-field"><h4>Backlog status</h4><p>${game.backlog_status}</p></div>
+      <div class="modal-field"><h4>Backlog status</h4><p>${game.backlog_status || "N/A"}</p></div>
+      <div class="modal-field"><h4>Estimated playtime</h4><p>${game.estimated_playtime_hours}h</p></div>
       <div class="modal-field"><h4>Reason to play</h4><p>${game.reason_to_play}</p></div>
-      <div class="modal-field"><h4>Tags</h4><p>${game.tags.join(", ")}</p></div>
+      <div class="modal-field"><h4>Tags</h4><p>${(game.tags || []).join(", ")}</p></div>
     </div>
   `;
 }
@@ -324,7 +455,10 @@ function wireEventHandlers(data) {
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && !modal.classList.contains("hidden")) {
       closeModal();
+      return;
     }
+
+    trapModalFocus(event);
   });
 }
 

@@ -25,12 +25,53 @@ A static, GitHub Pages-friendly trophy room site for tracking completed and plan
 
 ## Data organization (`data/games.json`)
 
-The site reads game content from JSON and currently expects:
+The site reads game content from JSON and expects:
 
 - `completed_games`: array of finished entries
 - `to_play_games`: array of planned entries
 
 Each object includes metadata used in cards, stats, filters, and modal details. Keep field names consistent when adding new games.
+
+### Canonical status fields
+
+Both collections now include a canonical `status` field:
+
+- `completed_games[].status`: completion-oriented values such as `Completed`, `100%`, or `Replayed`
+- `to_play_games[].status`: planning/backlog values such as `High Priority`, `Planned`, or `Waiting for Sale`
+
+For to-play items, `backlog_status` remains an optional supplemental workflow field (for example `Queued` or `On Hold`) and is separate from `status` and `priority`.
+
+### Field guidance
+
+Common fields used across entries:
+
+- `id`
+- `title`
+- `cover_image`
+- `genre`
+- `tags`
+- `notes` (optional)
+- `status`
+
+Completed game fields typically include:
+
+- `platform`
+- `start_date`
+- `finish_date`
+- `total_playtime_hours`
+- `completion_type`
+- `achievements_completed`
+- `achievements_total`
+- `rating`
+- `favorite_memory`
+
+To-play game fields typically include:
+
+- `target_platform`
+- `estimated_playtime_hours`
+- `priority`
+- `backlog_status` (optional supplemental state)
+- `reason_to_play`
 
 ## Adding cover art
 
