@@ -1,0 +1,37 @@
+{
+  "completed_games": [
+    {
+      "id": "it-takes-two-2024",
+      "title": "It Takes Two",
+      "cover_image": "assets/images/covers/it-takes-two.svg",
+      "platform": "PlayStation 5",
+      "status": "Completed",
+      "start_date": "2024-03-16",
+      "finish_date": "2024-04-02",
+      "total_playtime_hours": 18,
+      "completion_type": "Main Story + Side Activities",
+      "achievements_completed": 17,
+      "achievements_total": 20,
+      "rating": 4.7,
+      "notes": "Tight pacing and varied level design made every session feel fresh.",
+      "favorite_memory": "The co-op chaos in the Clockwork chapter when both of us finally synced the puzzle timing.",
+      "tags": ["Co-op", "Story", "Puzzle"],
+      "genre": "Action-Adventure"
+    }
+  ],
+  "to_play_games": [
+    {
+      "id": "helldivers-2-queue",
+      "title": "Helldivers 2",
+      "cover_image": "assets/images/covers/helldivers-2.svg",
+      "target_platform": "PC",
+      "status": "High Priority",
+      "estimated_playtime_hours": 40,
+      "priority": "High",
+      "backlog_status": "Queued",
+      "reason_to_play": "Strong squad co-op loop, tactical chaos, and a good long-term session game for weekly nights.",
+      "tags": ["Co-op", "Shooter", "Live Service"],
+      "genre": "Action"
+    }
+  ]
+}
