@@ -328,10 +328,22 @@ h1 {
 }
 
 .active-card {
+  width: 100%;
   border: 1px solid rgba(139, 168, 255, 0.28);
   border-radius: var(--radius-md);
   background: linear-gradient(155deg, rgba(139, 168, 255, 0.12), rgba(17, 20, 26, 0.9));
   padding: 0.8rem 0.9rem;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 180ms ease, border-color 180ms ease;
+}
+
+.active-card:hover,
+.active-card:focus-visible {
+  border-color: rgba(139, 168, 255, 0.55);
+  transform: translateY(-2px);
 }
 
 .active-card-header {
