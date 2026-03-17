@@ -1,58 +1,114 @@
-# AGENTS.md for assets/js
+# AGENTS.md
 
-## Purpose
-This directory contains the JavaScript for the Bro-Ops Trophy Room site.
+JavaScript instructions for Bro-Ops Trophy Room.
 
-Write JavaScript that is **clear, incremental, and easy to review**. This project is intentionally lightweight. Do not turn it into an app framework.
+This file applies to JavaScript work in `assets/js/`.
 
-## JavaScript standards
-- Use plain modern JavaScript.
-- Favor small, readable functions with obvious names.
-- Organize logic by responsibility:
-  - data loading,
-  - derived stats,
-  - filters/sorts,
-  - rendering,
-  - interaction behavior,
-  - modal behavior.
-- Keep the code understandable to a non-expert owner.
-- Avoid clever abstractions unless they clearly reduce complexity.
+## Role of the JavaScript layer
 
-## Do not
-- Do not introduce framework patterns.
-- Do not create unnecessary class hierarchies.
-- Do not add a state-management library.
-- Do not over-abstract one-off UI behavior.
-- Do not leave visible controls partially unwired.
+The JavaScript should remain lightweight and readable. Its responsibilities are:
+- loading data from `data/games.json`
+- deriving stats and active subsets
+- rendering cards and sections
+- wiring filters
+- opening and closing modals
+- preserving accessibility basics
 
-## Data handling rules
-- Treat `data/games.json` as the canonical content source unless told otherwise.
-- Preserve the distinction between `completed_games` and `to_play_games`.
-- Keep filtering and sorting logic aligned with actual fields in the JSON.
-- If a filter is visible, it must work.
-- If the data model changes, update all dependent render and filter logic.
+Do not turn the site into a complex client app.
 
-## UI behavior rules
-- Keep rendered card markup and modal markup readable.
-- Prefer graceful empty states over blank areas.
-- Format dates for display in the UI instead of forcing presentation formatting into JSON.
-- Keep hero/stats/card content driven from data when practical.
-- Maintain keyboard-friendly interaction patterns.
+## Data model rules
 
-## Modal rules
-If a modal is used:
-- open reliably from cards or explicit triggers,
-- close on Escape,
-- close on overlay click when appropriate,
-- return focus to the triggering element,
-- trap focus while open when practical.
+The JavaScript must follow the canonical repository schema.
 
-## Stats and filters
-- Derived values should be semantically clear, not technically misleading.
-- Avoid ambiguous labels like "combined hours" unless the combined meaning is explicit.
-- Platform counts should communicate counts by platform, not just the number of unique platforms, unless that is explicitly requested.
+### Primary collections
+Only read from:
+- `completed_games`
+- `to_play_games`
 
-## Performance and scope
-- Optimize for simplicity and correctness over micro-optimizations.
-- This is a small static site. Keep the implementation light.
-- Prefer incremental edits over full rewrites.
+Do not introduce a third primary collection for active games.
+
+### Optional activity
+The currently active / in rotation view must be derived by scanning both primary collections for `activity_state`.
+
+Allowed `activity_state` values:
+- `Currently Playing`
+- `In Rotation`
+- `Paused`
+
+Treat absence of `activity_state` as inactive.
+Do not rely on blank strings.
+Do not use `Queued` or other backlog states as activity values.
+
+### Status rules
+Completed `status` values:
+- `Completed`
+- `100%`
+
+To-play `status` values:
+- `Queued`
+- `Waiting for Sale`
+- `Considering`
+- `On Hold`
+
+Priority values:
+- `High`
+- `Medium`
+- `Low`
+
+Do not reintroduce `backlog_status` into rendering or filtering logic.
+
+## Rendering rules
+
+- Completed cards should be denser than to-play cards
+- To-play cards can remain slightly richer and more planning-oriented
+- Cards should show only high-signal information
+- Rich details belong in modals
+- Active items should integrate into the same browse/detail model as the main collections when the prompt calls for it
+
+## Filtering and sorting rules
+
+- Keep completed and to-play controls separate
+- `status` and `priority` are different concepts and must remain separate
+- Filters should be robust to missing optional fields
+- Derived filter options should reflect controlled vocabularies found in the data
+- Empty results must render an intentional empty state, not a blank area
+
+## Stats rules
+
+- Stats must be derived from the two primary collections
+- Completed logged hours and planned estimated hours are separate concepts
+- Platform reporting should communicate useful counts/breakdowns rather than vague totals
+- Do not hardcode user-facing totals that can be computed from data
+
+## Formatting rules
+
+- Dates displayed in the UI should be human-friendly
+- Raw JSON date values stay in `YYYY-MM-DD`
+- Half-step ratings should display cleanly
+- Optional fields should degrade gracefully when absent
+
+## Accessibility rules
+
+- Modal interactions must support keyboard use
+- Preserve Escape close
+- Preserve overlay click close
+- Preserve focus return
+- Keep focus trapping intact when the modal is open
+
+## Code quality rules
+
+- Keep functions small and purposeful
+- Avoid framework-style abstractions
+- Avoid unnecessary generic utility layers
+- Prefer straightforward data transforms over cleverness
+- Preserve GitHub Pages-safe relative path assumptions
+- When migrating schema, update legacy logic carefully rather than piling compatibility hacks on top forever
+
+## When schema changes happen
+
+If a prompt changes schema expectations:
+- update rendering logic
+- update filtering logic
+- update derived views
+- remove deprecated field dependencies
+- keep the final code aligned to the current canonical schema, not mixed old/new behavior
