@@ -15,8 +15,13 @@
       "rating": 4.7,
       "notes": "Tight pacing and varied level design made every session feel fresh.",
       "favorite_memory": "The co-op chaos in the Clockwork chapter when both of us finally synced the puzzle timing.",
-      "tags": ["Co-op", "Story", "Puzzle"],
-      "genre": "Action-Adventure"
+      "tags": [
+        "Co-op",
+        "Story",
+        "Puzzle"
+      ],
+      "genre": "Action-Adventure",
+      "activity_state": "In Rotation"
     }
   ],
   "to_play_games": [
@@ -30,8 +35,13 @@
       "priority": "High",
       "backlog_status": "Queued",
       "reason_to_play": "Strong squad co-op loop, tactical chaos, and a good long-term session game for weekly nights.",
-      "tags": ["Co-op", "Shooter", "Live Service"],
-      "genre": "Action"
+      "tags": [
+        "Co-op",
+        "Shooter",
+        "Live Service"
+      ],
+      "genre": "Action",
+      "activity_state": "Currently Playing"
     }
   ]
 }

@@ -243,12 +243,14 @@ h1 {
   margin-top: 0.3rem;
 }
 
+.section-active,
 .section-completed,
 .section-planned,
 .section-about {
   position: relative;
 }
 
+.section-active::before,
 .section-completed::before,
 .section-planned::before,
 .section-about::before {
@@ -307,6 +309,65 @@ h1 {
   font-size: 0.98rem;
   line-height: 1.35;
   font-weight: 500;
+}
+
+
+.section-active .section-heading-wrap h2 {
+  color: #d7e4ff;
+}
+
+.section-active {
+  background: linear-gradient(180deg, rgba(12, 18, 28, 0.45), rgba(12, 18, 28, 0));
+}
+
+.active-grid {
+  margin-top: 1.35rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
+  gap: 0.75rem;
+}
+
+.active-card {
+  border: 1px solid rgba(139, 168, 255, 0.28);
+  border-radius: var(--radius-md);
+  background: linear-gradient(155deg, rgba(139, 168, 255, 0.12), rgba(17, 20, 26, 0.9));
+  padding: 0.8rem 0.9rem;
+}
+
+.active-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.active-card h3 {
+  margin: 0;
+  font-size: 0.98rem;
+}
+
+.active-source-chip {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.7rem;
+  color: var(--text-soft);
+  padding: 0.15rem 0.48rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.active-meta {
+  margin: 0.45rem 0 0;
+  color: #d4deef;
+  font-size: 0.86rem;
+}
+
+.active-state {
+  margin: 0.5rem 0 0;
+  color: #f0e3c2;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 /* Section identity */
@@ -397,6 +458,43 @@ h1 {
 .section-completed .game-card:focus-visible {
   transform: translateY(-3px);
   border-color: rgba(214, 187, 123, 0.55);
+}
+
+
+.section-completed .card-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.section-completed .cover-wrap {
+  aspect-ratio: 2.4 / 1;
+}
+
+.section-completed .card-content {
+  padding: 0.75rem;
+}
+
+.section-completed .card-title-row h3 {
+  font-size: 0.98rem;
+}
+
+.section-completed .card-meta {
+  margin-top: 0.55rem;
+  gap: 0.28rem;
+}
+
+.section-completed .meta-item {
+  font-size: 0.82rem;
+}
+
+.section-completed .tags {
+  margin-top: 0.6rem;
+  gap: 0.35rem;
+}
+
+.section-completed .tag {
+  font-size: 0.72rem;
+  padding: 0.12rem 0.42rem;
 }
 
 .section-planned .game-card {

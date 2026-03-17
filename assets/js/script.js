@@ -30,6 +30,22 @@ function formatDisplayDate(rawDate) {
   });
 }
 
+function formatCompactDate(rawDate) {
+  if (!rawDate) {
+    return "Unknown";
+  }
+
+  const parsedDate = new Date(`${rawDate}T00:00:00`);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return rawDate;
+  }
+
+  return parsedDate.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short"
+  });
+}
+
 function pluralize(count, singular, plural = `${singular}s`) {
   return `${count} ${count === 1 ? singular : plural}`;
 }
@@ -214,8 +230,10 @@ function applyPlannedFilters(games) {
 }
 
 // Rendering
-function tagMarkup(tags) {
-  return (tags || []).map((tag) => `<span class="tag">${tag}</span>`).join("");
+function tagMarkup(tags, limit) {
+  const safeTags = tags || [];
+  const visibleTags = typeof limit === "number" ? safeTags.slice(0, limit) : safeTags;
+  return visibleTags.map((tag) => `<span class="tag">${tag}</span>`).join("");
 }
 
 function emptyStateMarkup(title, message) {
@@ -225,6 +243,53 @@ function emptyStateMarkup(title, message) {
       <p>${message}</p>
     </article>
   `;
+}
+
+function getActiveGames(data) {
+  const completedActive = data.completed_games
+    .filter((game) => game.activity_state)
+    .map((game) => ({
+      ...game,
+      source: "Completed",
+      platformLabel: game.platform || "Platform TBD"
+    }));
+
+  const plannedActive = data.to_play_games
+    .filter((game) => game.activity_state)
+    .map((game) => ({
+      ...game,
+      source: "To-Play",
+      platformLabel: game.target_platform || "Platform TBD"
+    }));
+
+  return [...completedActive, ...plannedActive].sort((a, b) => a.title.localeCompare(b.title));
+}
+
+function renderActiveGames(activeGames) {
+  const grid = document.getElementById("active-grid");
+
+  if (!activeGames.length) {
+    grid.innerHTML = emptyStateMarkup(
+      "No active runs right now",
+      "Set a game's optional activity_state to Currently Playing or In Rotation to pin it here."
+    );
+    return;
+  }
+
+  grid.innerHTML = activeGames
+    .map(
+      (game) => `
+      <article class="active-card">
+        <div class="active-card-header">
+          <h3>${game.title}</h3>
+          <span class="active-source-chip">${game.source}</span>
+        </div>
+        <p class="active-meta">${game.platformLabel} • ${game.genre}</p>
+        <p class="active-state">${game.activity_state}</p>
+      </article>
+    `
+    )
+    .join("");
 }
 
 function renderCompletedGames(games) {
@@ -252,10 +317,10 @@ function renderCompletedGames(games) {
           </div>
           <dl class="card-meta">
             <div class="meta-item"><dt>Platform</dt><dd>${game.platform}</dd></div>
-            <div class="meta-item"><dt>Finished</dt><dd>${formatDisplayDate(game.finish_date)}</dd></div>
-            <div class="meta-item"><dt>Playtime</dt><dd>${game.total_playtime_hours}h logged</dd></div>
+            <div class="meta-item"><dt>Finished</dt><dd>${formatCompactDate(game.finish_date)}</dd></div>
+            <div class="meta-item"><dt>Hours</dt><dd>${game.total_playtime_hours}h</dd></div>
           </dl>
-          <div class="tags">${tagMarkup(game.tags)}</div>
+          <div class="tags">${tagMarkup(game.tags, 2)}</div>
         </div>
       </button>
     `
@@ -291,7 +356,7 @@ function renderPlannedGames(games) {
             <div class="meta-item"><dt>Estimated time</dt><dd>${game.estimated_playtime_hours}h</dd></div>
             <div class="meta-item"><dt>Status</dt><dd>${game.status}${game.backlog_status ? ` (${game.backlog_status})` : ""}</dd></div>
           </dl>
-          <div class="tags">${tagMarkup(game.tags)}</div>
+          <div class="tags">${tagMarkup(game.tags, 3)}</div>
         </div>
       </button>
     `
@@ -474,13 +539,16 @@ async function initializeSite() {
     renderStats(stats);
 
     setUpFilterScaffolding(data);
+    renderActiveGames(getActiveGames(data));
     renderCompletedGames(data.completed_games);
     renderPlannedGames(data.to_play_games);
 
     wireEventHandlers(data);
   } catch (error) {
     const statsGrid = document.getElementById("stats-grid");
+    const activeGrid = document.getElementById("active-grid");
     statsGrid.innerHTML = `<p>Unable to load game data. Please verify data/games.json.</p>`;
+    activeGrid.innerHTML = emptyStateMarkup("No active runs right now", "Game data could not be loaded.");
     console.error(error);
   }
 }
