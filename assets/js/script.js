@@ -275,7 +275,7 @@ function renderActiveGames(activeGames) {
   if (!activeGames.length) {
     grid.innerHTML = emptyStateMarkup(
       "No active runs right now",
-      "Set a game's optional activity_state to Currently Playing or In Rotation to pin it here."
+      "Set a game's optional activity_state to Currently Playing, In Rotation, or Paused to pin it here."
     );
     return;
   }
@@ -436,12 +436,21 @@ function closeModal() {
   }
 }
 
+function optionalModalField(label, value) {
+  if (!value) {
+    return "";
+  }
+
+  return `<div class="modal-field"><h4>${label}</h4><p>${value}</p></div>`;
+}
+
 function completedModalMarkup(game) {
   return `
     <h3 id="modal-title" class="modal-title">${game.title}</h3>
     <p class="modal-subtitle">${game.platform} • ${game.genre}</p>
     <div class="modal-grid">
       <div class="modal-field"><h4>Status</h4><p>${game.status}</p></div>
+      ${optionalModalField("Activity", game.activity_state)}
       <div class="modal-field"><h4>Start date</h4><p>${formatDisplayDate(game.start_date)}</p></div>
       <div class="modal-field"><h4>Finish date</h4><p>${formatDisplayDate(game.finish_date)}</p></div>
       <div class="modal-field"><h4>Total playtime</h4><p>${game.total_playtime_hours}h</p></div>
@@ -461,6 +470,7 @@ function plannedModalMarkup(game) {
     <p class="modal-subtitle">${game.target_platform} • ${game.genre}</p>
     <div class="modal-grid">
       <div class="modal-field"><h4>Status</h4><p>${game.status}</p></div>
+      ${optionalModalField("Activity", game.activity_state)}
       <div class="modal-field"><h4>Priority</h4><p>${game.priority}</p></div>
       <div class="modal-field"><h4>Estimated playtime</h4><p>${game.estimated_playtime_hours}h</p></div>
       <div class="modal-field"><h4>Reason to play</h4><p>${game.reason_to_play}</p></div>

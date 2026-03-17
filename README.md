@@ -121,6 +121,8 @@ The **Currently Active** section is a derived view computed from `completed_game
 
 It is not a separate source collection.
 
+When an active entry is opened, its modal also surfaces `activity_state` so live run context stays visible in the detail view.
+
 ## Adding cover art
 
 1. Add cover files into `assets/images/covers/`.
