@@ -7,6 +7,8 @@ async function loadGameData() {
   return response.json();
 }
 
+const ACTIVE_STATES = new Set(["Currently Playing", "In Rotation", "Paused"]);
+
 function normalizeText(value) {
   return String(value || "")
     .trim()
@@ -139,7 +141,7 @@ function renderStats(stats) {
 
   document.getElementById("hero-callouts").innerHTML = `
     <span class="callout-pill">${pluralize(stats.totalCompleted, "completed run")}</span>
-    <span class="callout-pill">${pluralize(stats.totalPlanned, "queued game")}</span>
+    <span class="callout-pill">${pluralize(stats.totalPlanned, "planned game")}</span>
   `;
 }
 
@@ -247,17 +249,19 @@ function emptyStateMarkup(title, message) {
 
 function getActiveGames(data) {
   const completedActive = data.completed_games
-    .filter((game) => game.activity_state)
+    .filter((game) => ACTIVE_STATES.has(game.activity_state))
     .map((game) => ({
       ...game,
+      sourceType: "completed",
       source: "Completed",
       platformLabel: game.platform || "Platform TBD"
     }));
 
   const plannedActive = data.to_play_games
-    .filter((game) => game.activity_state)
+    .filter((game) => ACTIVE_STATES.has(game.activity_state))
     .map((game) => ({
       ...game,
+      sourceType: "planned",
       source: "To-Play",
       platformLabel: game.target_platform || "Platform TBD"
     }));
@@ -279,14 +283,14 @@ function renderActiveGames(activeGames) {
   grid.innerHTML = activeGames
     .map(
       (game) => `
-      <article class="active-card">
+      <button class="active-card" type="button" data-card-type="${game.sourceType}" data-id="${game.id}">
         <div class="active-card-header">
           <h3>${game.title}</h3>
           <span class="active-source-chip">${game.source}</span>
         </div>
         <p class="active-meta">${game.platformLabel} • ${game.genre}</p>
         <p class="active-state">${game.activity_state}</p>
-      </article>
+      </button>
     `
     )
     .join("");
@@ -334,7 +338,7 @@ function renderPlannedGames(games) {
   if (!games.length) {
     grid.innerHTML = emptyStateMarkup(
       "No planned matches",
-      "No backlog entries match these filters. Try a different status, priority, or playtime range."
+      "No planned entries match these filters. Try a different status, priority, or playtime range."
     );
     return;
   }
@@ -354,7 +358,7 @@ function renderPlannedGames(games) {
           <dl class="card-meta">
             <div class="meta-item"><dt>Target platform</dt><dd>${game.target_platform}</dd></div>
             <div class="meta-item"><dt>Estimated time</dt><dd>${game.estimated_playtime_hours}h</dd></div>
-            <div class="meta-item"><dt>Status</dt><dd>${game.status}${game.backlog_status ? ` (${game.backlog_status})` : ""}</dd></div>
+            <div class="meta-item"><dt>Status</dt><dd>${game.status}</dd></div>
           </dl>
           <div class="tags">${tagMarkup(game.tags, 3)}</div>
         </div>
@@ -458,9 +462,9 @@ function plannedModalMarkup(game) {
     <div class="modal-grid">
       <div class="modal-field"><h4>Status</h4><p>${game.status}</p></div>
       <div class="modal-field"><h4>Priority</h4><p>${game.priority}</p></div>
-      <div class="modal-field"><h4>Backlog status</h4><p>${game.backlog_status || "N/A"}</p></div>
       <div class="modal-field"><h4>Estimated playtime</h4><p>${game.estimated_playtime_hours}h</p></div>
       <div class="modal-field"><h4>Reason to play</h4><p>${game.reason_to_play}</p></div>
+      <div class="modal-field"><h4>Notes</h4><p>${game.notes || "No notes logged."}</p></div>
       <div class="modal-field"><h4>Tags</h4><p>${(game.tags || []).join(", ")}</p></div>
     </div>
   `;
@@ -498,7 +502,7 @@ function wireEventHandlers(data) {
   });
 
   document.body.addEventListener("click", (event) => {
-    const card = event.target.closest(".game-card");
+    const card = event.target.closest(".game-card, .active-card");
     if (card) {
       const type = card.dataset.cardType;
       const id = card.dataset.id;

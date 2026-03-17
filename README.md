@@ -1,6 +1,6 @@
 # Bro-Ops Trophy Room
 
-A static, GitHub Pages-friendly trophy room site for tracking completed and planned bro-op games.
+A static, GitHub Pages-friendly trophy room site for tracking completed and to-play bro-op games.
 
 ## Repository structure
 
@@ -23,46 +23,31 @@ A static, GitHub Pages-friendly trophy room site for tracking completed and plan
         └── ui/
 ```
 
-## Data organization (`data/games.json`)
+## Data schema (`data/games.json`)
 
-The site reads game content from JSON and expects:
+The site reads game content from JSON and uses exactly two top-level collections:
 
-- `completed_games`: array of finished entries
-- `to_play_games`: array of planned entries
+- `completed_games`
+- `to_play_games`
 
-Each object includes metadata used in cards, stats, filters, and modal details. Keep field names consistent when adding new games.
+Do not add a third top-level collection for active games.
 
-### Canonical status fields
+### Common fields
 
-Both collections now include a canonical `status` field:
-
-- `completed_games[].status`: completion-oriented values such as `Completed`, `100%`, or `Replayed`
-- `to_play_games[].status`: planning/backlog values such as `High Priority`, `Planned`, or `Waiting for Sale`
-
-For to-play items, `backlog_status` remains an optional supplemental workflow field (for example `Queued` or `On Hold`) and is separate from `status` and `priority`.
-
-
-### Optional activity layer
-
-Entries in either collection can include an optional `activity_state` field to power the **Currently Active** section.
-
-- This is cross-collection metadata, not a third top-level list.
-- Example values: `Currently Playing`, `In Rotation`.
-- `completed_games` and `to_play_games` remain the only primary collections.
-
-### Field guidance
-
-Common fields used across entries:
+Use these common fields when applicable:
 
 - `id`
 - `title`
 - `cover_image`
+- `status`
 - `genre`
 - `tags`
+- `activity_state` (optional; omit when inactive)
 - `notes` (optional)
-- `status`
 
-Completed game fields typically include:
+### Completed-game fields
+
+Completed entries use:
 
 - `platform`
 - `start_date`
@@ -72,15 +57,69 @@ Completed game fields typically include:
 - `achievements_completed`
 - `achievements_total`
 - `rating`
-- `favorite_memory`
+- `favorite_memory` (optional)
+- `replayable` (optional boolean)
 
-To-play game fields typically include:
+### To-play fields
+
+To-play entries use:
 
 - `target_platform`
 - `estimated_playtime_hours`
 - `priority`
-- `backlog_status` (optional supplemental state)
 - `reason_to_play`
+- `notes` (optional)
+
+## Controlled vocabularies
+
+### Completed status
+
+Allowed values:
+
+- `Completed`
+- `100%`
+
+### To-play status
+
+Allowed values:
+
+- `Queued`
+- `Waiting for Sale`
+- `Considering`
+- `On Hold`
+
+### Priority
+
+Allowed values:
+
+- `High`
+- `Medium`
+- `Low`
+
+### Activity state
+
+Allowed values:
+
+- `Currently Playing`
+- `In Rotation`
+- `Paused`
+
+Rules:
+
+- `activity_state` is optional.
+- Omit it entirely when the game is inactive.
+- Do not use backlog workflow values as activity states.
+
+## Deprecated field
+
+- `backlog_status` has been removed from the canonical model and should not be used in data or UI logic.
+- To-play workflow stage now lives in `status`.
+
+## Currently Active behavior
+
+The **Currently Active** section is a derived view computed from `completed_games` and `to_play_games` entries that include `activity_state`.
+
+It is not a separate source collection.
 
 ## Adding cover art
 
@@ -95,12 +134,12 @@ To-play game fields typically include:
 - UI graphics/background accents: `assets/images/ui/`
 - Player photos/portraits: `assets/images/portraits/`
 
-## Replacing placeholder game data
+## Updating game entries
 
 1. Open `data/games.json`.
-2. Replace placeholder game objects with real entries.
-3. Preserve array structure and required fields for each category.
-4. Save and refresh the page—cards, stats, and modal content update from JSON automatically.
+2. Add or edit real game entries in `completed_games` or `to_play_games`.
+3. Keep field names and values aligned to the schema and controlled vocabularies above.
+4. Save and refresh the page—cards, stats, filters, active strip, and modal details update from JSON.
 
 ## GitHub Pages deployment note
 
