@@ -1,59 +1,81 @@
-# AGENTS.md for assets/css
+# AGENTS.md
 
-## Purpose
-This directory contains styling for the Bro-Ops Trophy Room site.
+CSS instructions for Bro-Ops Trophy Room.
 
-The visual goal is a **premium dark collector UI** with strong scanability, tasteful contrast, and restrained motion.
+This file applies to styling work in `assets/css/`.
 
-## Styling direction
-Keep the site:
-- dark,
-- modern,
-- premium,
-- game-forward,
-- clean,
-- readable,
-- card-based,
-- desktop-first but responsive.
+## Visual direction
 
-## Visual priorities
-Prioritize:
-1. hierarchy,
-2. spacing,
-3. contrast,
-4. card polish,
-5. section distinction,
-6. subtle interaction feedback.
+The site should feel:
+- dark
+- premium
+- modern
+- curated
+- game-centric
+- clean
+- readable
 
-## Avoid
-- retro arcade styling,
-- over-bright palettes,
-- gimmicky gradients everywhere,
-- fake 3D effects,
-- visual clutter,
-- dashboard/spreadsheet aesthetics,
-- excessively dense metadata blocks.
+Avoid:
+- retro arcade aesthetics
+- loud neon overload
+- fake 3D gimmicks
+- clutter
+- dashboard/spreadsheet energy
 
-## CSS conventions
-- Prefer reusable tokens/custom properties for colors, spacing, radius, and shadows.
-- Keep sections clearly commented.
-- Preserve a consistent spacing rhythm.
-- Keep component styles localized and understandable.
-- Do not introduce a utility-framework style naming explosion.
+## Layout hierarchy
 
-## Interaction and motion
-- Motion should be subtle only.
-- Hover/focus states should feel polished, not flashy.
-- Respect `prefers-reduced-motion` when practical.
-- Modal transitions should be restrained.
+The site follows this hierarchy:
+- strong hero
+- compact but premium stats
+- lightweight currently active layer
+- denser completed archive
+- slightly richer to-play archive
+- future-ready about/archive wing
+- restrained footer
 
-## Content presentation rules
-- Completed and to-play sections should feel related but not identical.
-- Cover art should support the design, not overpower it.
-- Chips, badges, and metadata pills should look refined and legible.
-- Empty states and placeholders should look intentional.
+Preserve that hierarchy unless the task explicitly changes it.
 
-## Responsiveness
-- Maintain desktop quality first.
-- Do not allow the mobile layout to break, overlap, or become unreadable.
-- Prefer straightforward responsive adjustments over complex layout tricks.
+## Archive density rules
+
+- Completed archive should be denser and more scan-friendly
+- To-play cards may remain slightly richer
+- Cards should not become oversized showcase tiles when the collection grows
+- Preserve strong spacing, but do not waste vertical space
+
+## Card design rules
+
+- Covers should support the layout, not overpower it
+- Metadata should be grouped clearly
+- Limit visual noise from chips and tags
+- High-signal fields should be visually prioritized
+- Rich detail belongs in modals, not jammed onto cards
+
+## Section identity rules
+
+Completed and to-play sections should feel distinct but cohesive:
+- completed: earned, archival, trophy-like
+- to-play: forward-looking, planned, anticipatory
+- currently active: compact, live, integrated
+
+Do not make the sections feel like different websites.
+
+## Motion rules
+
+- Keep motion subtle
+- Respect reduced-motion behavior where practical
+- No flashy animations
+- No gimmicks
+
+## Accessibility rules
+
+- Preserve contrast and readability
+- Preserve visible focus states
+- Do not rely only on color to communicate state
+- Keep controls large enough to use comfortably
+
+## Maintainability rules
+
+- Organize styles by section and component
+- Prefer clear selectors over overengineered nesting strategies
+- Preserve reusable tokens and consistent spacing systems
+- Make targeted changes rather than restyling the whole site during focused tasks
