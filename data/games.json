@@ -1,47 +1,83 @@
 {
   "completed_games": [
     {
-      "id": "it-takes-two-2024",
-      "title": "It Takes Two",
-      "cover_image": "assets/images/covers/it-takes-two.svg",
+      "id": "a-way-out",
+      "title": "A Way Out",
+      "cover_image": "assets/images/covers/Cover-Art-A-Way-Out.jpg",
       "status": "Completed",
-      "platform": "PlayStation 5",
-      "start_date": "2024-03-16",
-      "finish_date": "2024-04-02",
-      "total_playtime_hours": 18,
-      "completion_type": "Main Story + Side Activities",
-      "achievements_completed": 17,
-      "achievements_total": 20,
-      "rating": 4.7,
-      "notes": "Tight pacing and varied level design made every session feel fresh.",
-      "favorite_memory": "The co-op chaos in the Clockwork chapter when both of us finally synced the puzzle timing.",
+      "platform": "Steam",
+      "start_date": "2020-07-03",
+      "finish_date": "2020-07-31",
+      "total_playtime_hours": 9,
+      "completion_type": "Main Story",
+      "achievements_completed": 3,
+      "achievements_total": 14,
+      "rating": 4.0,
+      "notes": "First co-op only game we tried. Weird twist but hilarious moments.",
+      "favorite_memory": "Betraying each other at the end for the lulz.",
       "tags": [
         "Co-op",
         "Story",
-        "Puzzle"
+        "Cinematic"
       ],
-      "genre": "Action-Adventure",
-      "activity_state": "In Rotation"
+      "genre": "Action-Adventure"
+    },
+    {
+      "id": "corpse-factory",
+      "title": "CORPSE FACTORY",
+      "cover_image": "assets/images/covers/Cover-Art-CORPSE-FACTORY.jpg",
+      "status": "Completed",
+      "platform": "Steam",
+      "start_date": "2024-08-08",
+      "finish_date": "2024-09-11",
+      "total_playtime_hours": 24,
+      "completion_type": "All Routes",
+      "achievements_completed": 14,
+      "achievements_total": 14,
+      "rating": 4.0,
+      "notes": "Interesting plot with good English voice acting.",
+      "favorite_memory": "Alex losing his breath reciting a paragraphs upon paragraphs of weirdly erotic text inside a bathroom.",
+      "tags": [
+        "Female Protagonist",
+        "Story",
+        "Psychological Horror"
+      ],
+      "genre": "Visual Novel"
     }
   ],
   "to_play_games": [
     {
-      "id": "helldivers-2-queue",
-      "title": "Helldivers 2",
-      "cover_image": "assets/images/covers/helldivers-2.svg",
-      "status": "High Priority",
-      "target_platform": "PC",
-      "estimated_playtime_hours": 40,
+      "id": "slay-the-spire-2",
+      "title": "Slay The Spire 2",
+      "cover_image": "assets/images/covers/Cover-Art-Slay-The-Spire-2.jpg",
+      "status": "Queued",
+      "target_platform": "Steam",
+      "estimated_playtime_hours": 80,
       "priority": "High",
-      "backlog_status": "Queued",
-      "reason_to_play": "Strong squad co-op loop, tactical chaos, and a good long-term session game for weekly nights.",
+      "reason_to_play": "Great deck-building game similar to others we liked, plus they added co-op.",
       "tags": [
         "Co-op",
-        "Shooter",
-        "Live Service"
+        "Strategy",
+        "Deckbuilding"
       ],
-      "genre": "Action",
+      "genre": "Roguelike",
       "activity_state": "Currently Playing"
+    },
+    {
+      "id": "serial-lover",
+      "title": "Serial Lover",
+      "cover_image": "assets/images/covers/Cover-Art-Artbook-Serial-Lover.png",
+      "status": "Queued",
+      "target_platform": "Steam",
+      "estimated_playtime_hours": 10,
+      "priority": "Medium",
+      "reason_to_play": "It's a dating sim rhythm game about seducing serial killers. What more needs to be said?",
+      "tags": [
+        "Story",
+        "Rhythm",
+        "Dating Sim"
+      ],
+      "genre": "Visual Novel"
     }
   ]
 }
