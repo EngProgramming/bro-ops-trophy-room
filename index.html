@@ -17,6 +17,7 @@
         <p class="brand-mark">Bro-Ops Trophy Room</p>
         <nav aria-label="Primary">
           <ul class="nav-list">
+            <li><a href="#active">Active</a></li>
             <li><a href="#completed">Completed</a></li>
             <li><a href="#to-play">To-Play</a></li>
             <li><a href="#about">About</a></li>
@@ -59,6 +60,16 @@
             <p>Live archive metrics generated directly from this trophy room's game records.</p>
           </div>
           <div id="stats-grid" class="stats-grid" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section id="active" class="section-pad section-active" aria-labelledby="active-heading">
+        <div class="container">
+          <div class="section-heading-wrap">
+            <h2 id="active-heading">Currently Active</h2>
+            <p>Compact run sheet for games currently being played or revisited across both collections.</p>
+          </div>
+          <div id="active-grid" class="active-grid" aria-live="polite"></div>
         </div>
       </section>
 

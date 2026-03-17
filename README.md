@@ -41,6 +41,15 @@ Both collections now include a canonical `status` field:
 
 For to-play items, `backlog_status` remains an optional supplemental workflow field (for example `Queued` or `On Hold`) and is separate from `status` and `priority`.
 
+
+### Optional activity layer
+
+Entries in either collection can include an optional `activity_state` field to power the **Currently Active** section.
+
+- This is cross-collection metadata, not a third top-level list.
+- Example values: `Currently Playing`, `In Rotation`.
+- `completed_games` and `to_play_games` remain the only primary collections.
+
 ### Field guidance
 
 Common fields used across entries:
