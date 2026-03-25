@@ -8,9 +8,10 @@ This repository powers a static website called **Bro-Ops Trophy Room**. The site
 
 Default priorities, in order:
 1. Preserve correctness and GitHub Pages compatibility
-2. Preserve the established information architecture and schema discipline
+2. Preserve the established information architecture and approved schema discipline
 3. Improve scanability, polish, and emotional tone
-4. Avoid unnecessary complexity
+4. Make manual data entry safer and easier where practical
+5. Avoid unnecessary complexity
 
 ## Technical constraints
 
@@ -63,52 +64,93 @@ The site may derive secondary views from those two collections, such as:
 - currently active / in rotation strip
 - filtered subsets
 - spotlight sections
+- future timeline views
 
 Derived sections must be computed from the primary collections rather than duplicating data.
 
 ## Canonical schema rules
+
+### Shared template strategy
+
+The data model should favor easier manual editing by the repository owner.
+
+Use a broadly shared template shape across both collections when practical.
+
+Recommended empty-value conventions:
+- optional text/date/state fields: `""`
+- optional numeric fields: `null`
+- optional booleans: `null`
+- arrays: `[]`
+
+The UI should not render blank optional values.
 
 ### Common fields
 
 Use these common fields when applicable:
 - `id`
 - `title`
-- `cover_image`
+- `cover_art_landscape`
+- `cover_art_portrait`
 - `status`
-- `genre`
-- `tags`
-- `activity_state` (optional; omit if inactive)
-- `notes` (optional)
-
-### Completed-game fields
-
-Completed entries use:
 - `platform`
 - `start_date`
 - `finish_date`
-- `total_playtime_hours`
-- `completion_type`
+- `playtime_hours`
+- `genre`
+- `tags`
+- `setting`
+- `audience`
+- `theme`
+- `purpose`
+- `activity_state`
+- `replayable`
+- `has_achievements`
 - `achievements_completed`
 - `achievements_total`
 - `rating`
-- `favorite_memory` (optional)
-- `replayable` (optional boolean)
+- `priority`
+- `reason_to_play`
+- `notes`
+- `favorite_memory`
+- `completion_type`
+- `dlc_status`
+
+### Completed-game fields
+
+Completed entries primarily use:
+- `status`
+- `platform`
+- `start_date`
+- `finish_date`
+- `playtime_hours`
+- `completion_type`
+- `dlc_status`
+- `has_achievements`
+- `achievements_completed`
+- `achievements_total`
+- `rating`
+- `favorite_memory`
+- `replayable`
 
 ### To-play fields
 
-To-play entries use:
-- `target_platform`
-- `estimated_playtime_hours`
+To-play entries primarily use:
+- `status`
+- `platform`
+- `start_date` and `finish_date` if planned dates are known
+- `playtime_hours` as estimated hours
 - `priority`
 - `reason_to_play`
-- `notes` (optional)
+- `activity_state`
+- `replayable` when relevant for naturally ongoing games
 
-### Deprecated / disallowed field
+### Deprecated / disallowed fields
 
 - `backlog_status` is deprecated and must not be introduced into new data or new UI logic
-- If legacy code still references it, migrate that logic toward `status`
+- `target_platform` and `estimated_playtime_hours` should be migrated toward the shared `platform` and `playtime_hours` model when the approved migration prompt calls for it
+- `cover_image` should be migrated toward split landscape/portrait cover fields when the approved migration prompt calls for it
 
-## Controlled vocabularies
+## Controlled vocabularies owned in this repo
 
 ### Completed `status`
 Allowed values:
@@ -118,7 +160,9 @@ Allowed values:
 ### To-play `status`
 Allowed values:
 - `Queued`
+- `Active`
 - `Waiting for Sale`
+- `Waiting for Release`
 - `Considering`
 - `On Hold`
 
@@ -135,30 +179,38 @@ Allowed values:
 - `Paused`
 
 Important:
-- Omit `activity_state` entirely when a game is not active
-- Do not use blank strings for inactive items
-- Do not use backlog concepts like `Queued` as an `activity_state`
+- treat `activity_state` as active-only metadata
+- do not use backlog concepts like `Queued` as `activity_state`
+- blank/null activity should not render in the UI
 
 ### `completion_type`
 Allowed values:
 - `Main Story`
 - `Main Story + Side Content`
 - `All Routes`
+- `Milestone / Open-Ended`
 
-Important:
-- Do not use `Total Completion` here because that overlaps with `status: "100%"`
+### `dlc_status`
+Allowed values:
+- `""`
+- `Some DLC Played`
+- `All DLC Played`
+- `DLC Pending`
 
 ## Field-shape rules
 
 - `id`: lowercase kebab-case string
 - `title`: full display title string
-- `cover_image`: relative repo path string
-- `platform` / `target_platform`: single string from the controlled platform vocabulary
-- `genre`: single string from the controlled genre vocabulary
-- `tags`: array of 0 to 3 strings from the controlled tag vocabulary
+- `cover_art_landscape`: relative repo path string when available
+- `cover_art_portrait`: relative repo path string when available
+- `platform`: single string from the controlled platform vocabulary
+- `genre`: single string from the external controlled vocabulary
+- `tags`: array of exactly 3 strings for now, from the external controlled vocabulary
+- `setting`, `audience`, `theme`, `purpose`: external controlled vocabulary fields
 - `rating`: numeric 1.0 to 5.0, half-step values allowed
-- dates: `YYYY-MM-DD` strings
-- `replayable`: boolean
+- `start_date` / `finish_date`: support `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`
+- `replayable`: boolean if present
+- `has_achievements`: boolean if present
 
 Do not change field shapes casually. Keep the schema stable.
 
@@ -177,68 +229,35 @@ Starter platform vocabulary:
 - `PlayStation 2`
 - `PlayStation 3`
 - `PlayStation 4`
+- `PlayStation 4 Pro`
 - `PlayStation 5`
+- `PlayStation 5 Pro`
 - `Xbox`
 - `Xbox 360`
 - `Xbox One`
-- `Xbox Series X|S`
+- `Xbox Series S`
+- `Xbox Series X`
+- `Nintendo 64`
+- `GameCube`
+- `Wii`
+- `Wii U`
 - `Nintendo Switch`
+- `Nintendo Switch 2`
+- `Dreamcast`
+- `Nintendo DS`
+- `Nintendo 3DS`
 
-Only add new platform values when they are genuinely needed. Prefer consistency over completeness.
+Only add new platform values when genuinely needed. Prefer consistency over exhaustiveness.
 
-## Controlled genre vocabulary
+## External taxonomies
 
-Use this site-level genre taxonomy:
-- `Action`
-- `Adventure`
-- `Action-Adventure`
-- `RPG`
-- `Shooter`
-- `Strategy`
-- `Puzzle`
-- `Platformer`
-- `Fighting`
-- `Racing`
-- `Simulation`
-- `Survival`
-- `Horror`
-- `Visual Novel`
-- `Roguelike`
-- `Rhythm`
-- `Party`
-- `Sandbox`
+Genre, tags, setting, audience, theme, and purpose vocabularies are controlled externally by another project.
 
-Do not convert `genre` into an array. Additional nuance belongs in `tags`.
-
-## Controlled tag vocabulary
-
-Use a controlled starter tag list and expand only when needed.
-
-Starter tags:
-- `Co-op`
-- `Online Co-op`
-- `Local Co-op`
-- `Story`
-- `Cinematic`
-- `Choice-Driven`
-- `Psychological Horror`
-- `Horror`
-- `Mystery`
-- `Comedy`
-- `Strategy`
-- `Deckbuilding`
-- `Replayable`
-- `Rhythm`
-- `Dating Sim`
-- `Female Protagonist`
-- `Fantasy`
-- `Sci-Fi`
-- `Stealth`
-- `Survival`
-- `Open World`
-- `Turn-Based`
-
-Keep tags high-signal and restrained. Avoid tag bloat.
+This repository should:
+- preserve field shape,
+- preserve expected render/filter behavior,
+- avoid inventing new competing vocabularies here,
+- and keep exact value usage consistent with the external source.
 
 ## UX rules
 
@@ -247,8 +266,10 @@ The site follows a scan-first, detail-on-demand model.
 - Cards should stay compact and readable
 - Completed archive should be denser than to-play
 - Richer details belong in modals
-- Cross-collection active items should feel integrated, not duplicated
-- Preserve the existing distinction between completed, to-play, and currently active derived views
+- Active items should feel integrated, not duplicated
+- Cover art should be visible on cards and in modals
+- Card image treatment should avoid destructive cropping when practical
+- Use optional-field rendering rather than showing empty placeholders
 
 ## Review / change rules
 
@@ -265,3 +286,4 @@ Unless the prompt says otherwise:
 - provide full contents of every changed file
 - clearly label each file path
 - explain any schema migrations or deprecations
+- state how real existing data was normalized when migrations are involved
