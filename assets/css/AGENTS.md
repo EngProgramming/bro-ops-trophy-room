@@ -41,14 +41,26 @@ Preserve that hierarchy unless the task explicitly changes it.
 - To-play cards may remain slightly richer
 - Cards should not become oversized showcase tiles when the collection grows
 - Preserve strong spacing, but do not waste vertical space
+- Reassess density only after real content reveals a need
 
 ## Card design rules
 
-- Covers should support the layout, not overpower it
+- Card media should remain visually pleasing in landscape frames
+- Avoid destructive cover cropping when possible
+- Prefer image-fitting strategies that preserve readability of cover art
+- If letterboxing/pillarboxing appears, make it look intentional with a styled background
 - Metadata should be grouped clearly
 - Limit visual noise from chips and tags
 - High-signal fields should be visually prioritized
 - Rich detail belongs in modals, not jammed onto cards
+
+## Modal design rules
+
+- Modals should feel like richer trophy entries, not just text dumps
+- Show cover art in modals when assets are available
+- Portrait art is preferred in the modal when available; landscape art may be used as fallback
+- Keep the modal clean, premium, and readable
+- Optional fields may disappear, but the layout should still feel consistent
 
 ## Section identity rules
 
