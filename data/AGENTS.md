@@ -14,39 +14,67 @@ The canonical JSON structure is:
 Do not add a third top-level collection for active games.
 Active behavior must be derived from the two main collections.
 
+## Shared template strategy
+
+The repository should favor a stable shared template shape that is easier for a human owner to edit consistently.
+
+Recommended empty-value conventions:
+- optional text/date/state fields: `""`
+- optional numeric fields: `null`
+- optional booleans: `null`
+- arrays: `[]`
+
+The UI layer should avoid rendering blank optional values.
+
 ## Common fields
 
 Common fields used when applicable:
 - `id`
 - `title`
-- `cover_image`
-- `status`
-- `genre`
-- `tags`
-- `activity_state` (optional; omit if inactive)
-- `notes` (optional)
-
-## Completed-game schema
-
-Required / supported fields:
-- `id`
-- `title`
-- `cover_image`
+- `cover_art_landscape`
+- `cover_art_portrait`
 - `status`
 - `platform`
 - `start_date`
 - `finish_date`
-- `total_playtime_hours`
-- `completion_type`
+- `playtime_hours`
+- `genre`
+- `tags`
+- `setting`
+- `audience`
+- `theme`
+- `purpose`
+- `activity_state`
+- `replayable`
+- `has_achievements`
 - `achievements_completed`
 - `achievements_total`
 - `rating`
-- `genre`
-- `tags`
-- `notes` (optional)
-- `favorite_memory` (optional)
-- `activity_state` (optional)
-- `replayable` (optional boolean)
+- `priority`
+- `reason_to_play`
+- `notes`
+- `favorite_memory`
+- `completion_type`
+- `dlc_status`
+
+## Completed-game schema
+
+Completed entries primarily use:
+- `status`
+- `platform`
+- `start_date`
+- `finish_date`
+- `playtime_hours`
+- `completion_type`
+- `dlc_status`
+- `has_achievements`
+- `achievements_completed`
+- `achievements_total`
+- `rating`
+- `notes`
+- `favorite_memory`
+- `activity_state`
+- `replayable`
 
 ### Completed status vocabulary
 Allowed values:
@@ -58,29 +86,35 @@ Allowed values:
 - `Main Story`
 - `Main Story + Side Content`
 - `All Routes`
+- `Milestone / Open-Ended`
 
-Do not use `Total Completion` here because it overlaps with `status: "100%"`.
+### DLC status vocabulary
+Allowed values:
+- `""`
+- `Some DLC Played`
+- `All DLC Played`
+- `DLC Pending`
 
 ## To-play schema
 
-Required / supported fields:
-- `id`
-- `title`
-- `cover_image`
+To-play entries primarily use:
 - `status`
-- `target_platform`
-- `estimated_playtime_hours`
+- `platform`
+- `start_date`
+- `finish_date`
+- `playtime_hours`
 - `priority`
 - `reason_to_play`
-- `genre`
-- `tags`
-- `notes` (optional)
-- `activity_state` (optional)
+- `notes`
+- `activity_state`
+- `replayable`
 
 ### To-play status vocabulary
 Allowed values:
 - `Queued`
+- `Active`
 - `Waiting for Sale`
+- `Waiting for Release`
 - `Considering`
 - `On Hold`
 
@@ -98,25 +132,33 @@ Allowed values:
 - `Paused`
 
 Rules:
-- omit `activity_state` when inactive
-- do not use empty strings
+- blank/null activity means inactive
 - do not use backlog states like `Queued` as activity states
 - completed entries may use `In Rotation`
-- to-play entries may use `Currently Playing`
+- to-play entries may use `Currently Playing` or `Paused`
+
+## Achievements rules
+
+- `has_achievements` should indicate whether achievement counts are meaningful at all
+- when `has_achievements` is false, achievement counts may be null
+- avoid using `0 / 0` as the preferred representation for “achievements do not exist”
 
 ## Field-shape rules
 
 - `id`: lowercase kebab-case string
 - `title`: formal display title string
-- `cover_image`: relative repo path string such as `assets/images/covers/game-title.jpg`
-- `platform` / `target_platform`: single string
-- `genre`: single string
-- `tags`: array of 0 to 3 strings
+- `cover_art_landscape`: relative repo path string when available
+- `cover_art_portrait`: relative repo path string when available
+- `platform`: single string
+- `genre`: single string from an external controlled vocabulary
+- `tags`: array of exactly 3 strings for now, from an external controlled vocabulary
+- `setting`, `audience`, `theme`, `purpose`: external controlled vocabulary fields
 - `rating`: numeric 1.0 to 5.0, half-step values allowed
-- dates: `YYYY-MM-DD`
+- `start_date` / `finish_date`: may be `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`
 - `replayable`: boolean if present
+- `has_achievements`: boolean if present
 
-## Controlled platform vocabulary
+## Platform vocabulary
 
 Use exact spelling from the repository-standard platform vocabulary:
 - `Steam`
@@ -129,66 +171,35 @@ Use exact spelling from the repository-standard platform vocabulary:
 - `PlayStation 2`
 - `PlayStation 3`
 - `PlayStation 4`
+- `PlayStation 4 Pro`
 - `PlayStation 5`
+- `PlayStation 5 Pro`
 - `Xbox`
 - `Xbox 360`
 - `Xbox One`
-- `Xbox Series X|S`
+- `Xbox Series S`
+- `Xbox Series X`
+- `Nintendo 64`
+- `GameCube`
+- `Wii`
+- `Wii U`
 - `Nintendo Switch`
+- `Nintendo Switch 2`
+- `Dreamcast`
+- `Nintendo DS`
+- `Nintendo 3DS`
 
-## Controlled genre vocabulary
+## External taxonomies
 
-Use one value from:
-- `Action`
-- `Adventure`
-- `Action-Adventure`
-- `RPG`
-- `Shooter`
-- `Strategy`
-- `Puzzle`
-- `Platformer`
-- `Fighting`
-- `Racing`
-- `Simulation`
-- `Survival`
-- `Horror`
-- `Visual Novel`
-- `Roguelike`
-- `Rhythm`
-- `Party`
-- `Sandbox`
+`genre`, `tags`, `setting`, `audience`, `theme`, and `purpose` are controlled externally.
 
-## Controlled tag vocabulary
+This repo should define shape and usage, not maintain competing value lists here.
 
-Use up to 3 high-signal tags from:
-- `Co-op`
-- `Online Co-op`
-- `Local Co-op`
-- `Story`
-- `Cinematic`
-- `Choice-Driven`
-- `Psychological Horror`
-- `Horror`
-- `Mystery`
-- `Comedy`
-- `Strategy`
-- `Deckbuilding`
-- `Replayable`
-- `Rhythm`
-- `Dating Sim`
-- `Female Protagonist`
-- `Fantasy`
-- `Sci-Fi`
-- `Stealth`
-- `Survival`
-- `Open World`
-- `Turn-Based`
-
-Expand the vocabulary only when truly needed and keep naming consistent.
-
-## Deprecated field
+## Deprecated fields
 
 - `backlog_status` is deprecated and should not be used in new data entries
+- `target_platform` and `estimated_playtime_hours` are legacy field names slated for migration toward the shared template model
+- `cover_image` is a legacy field name slated for migration toward split landscape/portrait cover fields
 
 ## Editing rules
 
@@ -197,4 +208,5 @@ When editing `games.json`:
 - keep commas correct
 - preserve the two top-level arrays
 - do not mix old and new schema models
-- prefer omission over fake placeholder values for optional fields
+- prefer the shared-template conventions over ad hoc omissions once the migration prompt is approved
+- keep real user-authored notes and memories intact during migrations
