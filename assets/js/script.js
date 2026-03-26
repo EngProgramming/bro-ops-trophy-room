@@ -27,6 +27,13 @@ function coerceNumber(value) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function getCardCoverArt(game) {
+  if (isPresent(game.cover_art_landscape)) return game.cover_art_landscape;
+  if (isPresent(game.cover_art_portrait)) return game.cover_art_portrait;
+  return "";
+}
+
+// Schema normalization helpers
 function normalizeGame(game) {
   return {
     ...game,
@@ -38,10 +45,12 @@ function normalizeGame(game) {
     achievements_completed: coerceNumber(game.achievements_completed),
     achievements_total: coerceNumber(game.achievements_total),
     tags: Array.isArray(game.tags) ? game.tags : [],
-    cover_art_landscape: game.cover_art_landscape || ""
+    cover_art_landscape: game.cover_art_landscape || "",
+    cover_art_portrait: game.cover_art_portrait || ""
   };
 }
 
+// Date formatting helpers (supports YYYY, YYYY-MM, YYYY-MM-DD)
 function parsePartialDate(rawDate) {
   if (!isPresent(rawDate)) return null;
   const value = String(rawDate).trim();
@@ -101,6 +110,7 @@ function pluralize(count, singular, plural = `${singular}s`) {
   return `${count} ${count === 1 ? singular : plural}`;
 }
 
+// Stats calculation
 function buildPlatformBreakdown(completed, planned) {
   const platformCounts = {};
   [...completed, ...planned].forEach((item) => {
@@ -186,6 +196,7 @@ function renderStats(stats) {
   `;
 }
 
+// Filter/sort scaffolding helpers
 function uniqueValues(collection, field) {
   return [...new Set(collection.flatMap((item) => item[field] || []))].sort((a, b) => a.localeCompare(b));
 }
@@ -267,6 +278,7 @@ function applyPlannedFilters(games) {
   return sortByTitle(filtered, sort);
 }
 
+// Rendering
 function tagMarkup(tags, limit) {
   const safeTags = tags || [];
   const visibleTags = typeof limit === "number" ? safeTags.slice(0, limit) : safeTags;
@@ -347,17 +359,17 @@ function renderCompletedGames(games) {
       (game) => `
       <button class="game-card" data-card-type="completed" data-id="${game.id}">
         <div class="cover-wrap">
-          <img src="${game.cover_art_landscape}" alt="${game.title} cover art" loading="lazy" />
+          <img src="${getCardCoverArt(game)}" alt="${game.title} cover art" loading="lazy" />
         </div>
         <div class="card-content">
           <div class="card-title-row">
             <h3>${game.title}</h3>
-            <span class="rating-chip">★ ${isPresent(game.rating) ? game.rating : "—"}</span>
+            ${isPresent(game.rating) ? `<span class="rating-chip">★ ${game.rating}</span>` : ""}
           </div>
           <dl class="card-meta">
             <div class="meta-item"><dt>Platform</dt><dd>${game.platform || "Platform TBD"}</dd></div>
             <div class="meta-item"><dt>Finished</dt><dd>${formatCompactDate(game.finish_date)}</dd></div>
-            <div class="meta-item"><dt>Hours</dt><dd>${isPresent(game.playtime_hours) ? `${game.playtime_hours}h` : "—"}</dd></div>
+            ${isPresent(game.playtime_hours) ? `<div class="meta-item"><dt>Hours</dt><dd>${game.playtime_hours}h</dd></div>` : ""}
           </dl>
           <div class="tags">${tagMarkup(game.tags, 2)}</div>
         </div>
@@ -383,16 +395,16 @@ function renderPlannedGames(games) {
       (game) => `
       <button class="game-card" data-card-type="planned" data-id="${game.id}">
         <div class="cover-wrap">
-          <img src="${game.cover_art_landscape}" alt="${game.title} cover art" loading="lazy" />
+          <img src="${getCardCoverArt(game)}" alt="${game.title} cover art" loading="lazy" />
         </div>
         <div class="card-content">
           <div class="card-title-row">
             <h3>${game.title}</h3>
-            <span class="priority-chip">${game.priority || "Unranked"} priority</span>
+            ${isPresent(game.priority) ? `<span class="priority-chip">${game.priority} priority</span>` : ""}
           </div>
           <dl class="card-meta">
             <div class="meta-item"><dt>Platform</dt><dd>${game.platform || "Platform TBD"}</dd></div>
-            <div class="meta-item"><dt>Estimated time</dt><dd>${isPresent(game.playtime_hours) ? `${game.playtime_hours}h` : "—"}</dd></div>
+            ${isPresent(game.playtime_hours) ? `<div class="meta-item"><dt>Estimated time</dt><dd>${game.playtime_hours}h</dd></div>` : ""}
             <div class="meta-item"><dt>Status</dt><dd>${game.status || "—"}</dd></div>
           </dl>
           <div class="tags">${tagMarkup(game.tags, 3)}</div>
@@ -403,6 +415,7 @@ function renderPlannedGames(games) {
     .join("");
 }
 
+// Modal behavior
 const modal = document.getElementById("game-modal");
 const modalBody = document.getElementById("modal-body");
 const modalClose = document.getElementById("modal-close");
