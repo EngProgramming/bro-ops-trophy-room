@@ -198,8 +198,8 @@ This repo should define shape and usage, not maintain competing value lists here
 ## Deprecated fields
 
 - `backlog_status` is deprecated and should not be used in new data entries
-- `target_platform` and `estimated_playtime_hours` are legacy field names slated for migration toward the shared template model
-- `cover_image` is a legacy field name slated for migration toward split landscape/portrait cover fields
+- `target_platform` and `estimated_playtime_hours` are deprecated and should not be used
+- `cover_image` is deprecated and should not be used
 
 ## Editing rules
 

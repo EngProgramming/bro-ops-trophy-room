@@ -147,8 +147,8 @@ To-play entries primarily use:
 ### Deprecated / disallowed fields
 
 - `backlog_status` is deprecated and must not be introduced into new data or new UI logic
-- `target_platform` and `estimated_playtime_hours` should be migrated toward the shared `platform` and `playtime_hours` model when the approved migration prompt calls for it
-- `cover_image` should be migrated toward split landscape/portrait cover fields when the approved migration prompt calls for it
+- `target_platform` and `estimated_playtime_hours` are deprecated and must not be introduced into new data or UI logic
+- `cover_image` is deprecated and must not be introduced into new data or UI logic
 
 ## Controlled vocabularies owned in this repo
 
