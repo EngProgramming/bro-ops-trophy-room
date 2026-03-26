@@ -60,8 +60,8 @@ Do not reintroduce `backlog_status` into rendering or filtering logic.
 
 ## Field-shape rules relevant to JS
 
-- use shared `platform` for both collections when the approved migration is complete
-- use shared `playtime_hours` for both collections when the approved migration is complete
+- use shared `platform` for both collections
+- use shared `playtime_hours` for both collections
 - support both `YYYY`, `YYYY-MM`, and `YYYY-MM-DD` date shapes cleanly
 - treat booleans as booleans, not strings
 - treat blank/null optional values as absent in the UI
