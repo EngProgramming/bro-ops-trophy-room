@@ -479,7 +479,7 @@ h1 {
 }
 
 .section-completed .cover-wrap {
-  aspect-ratio: 2.4 / 1;
+  aspect-ratio: 16 / 9;
 }
 
 .section-completed .card-content {
@@ -521,13 +521,60 @@ h1 {
 
 .cover-wrap {
   aspect-ratio: 16 / 9;
-  background: #0f1318;
+  background:
+    radial-gradient(circle at 20% 22%, rgba(139, 168, 255, 0.16), transparent 52%),
+    radial-gradient(circle at 80% 72%, rgba(214, 187, 123, 0.14), transparent 58%),
+    linear-gradient(160deg, #121723, #0c1018);
   border-bottom: 1px solid var(--line);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
 }
 
 .cover-wrap img {
   height: 100%;
-  object-fit: cover;
+  width: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.cover-wrap--placeholder,
+.modal-cover--placeholder {
+  border-style: solid;
+}
+
+.cover-placeholder {
+  width: 100%;
+  height: 100%;
+  padding: 0.8rem;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.35rem;
+  text-align: center;
+}
+
+.cover-placeholder__badge {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--text-soft);
+  background: rgba(13, 16, 24, 0.78);
+  padding: 0.18rem 0.45rem;
+}
+
+.cover-placeholder p {
+  margin: 0;
+  color: #d3dbec;
+  font-size: 0.78rem;
+  max-width: 22ch;
+  line-height: 1.35;
+}
+
+.cover-placeholder--modal p {
+  font-size: 0.92rem;
 }
 
 .card-content {
@@ -685,7 +732,7 @@ h1 {
 
 .modal-content {
   position: relative;
-  width: min(680px, calc(100% - 2rem));
+  width: min(880px, calc(100% - 2rem));
   max-height: 88dvh;
   overflow-y: auto;
   border: 1px solid var(--line);
@@ -709,8 +756,41 @@ h1 {
   font-size: 1.15rem;
 }
 
+.modal-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.3fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.modal-cover {
+  align-self: stretch;
+  aspect-ratio: 3 / 4;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background:
+    radial-gradient(circle at 22% 22%, rgba(139, 168, 255, 0.16), transparent 52%),
+    radial-gradient(circle at 78% 74%, rgba(214, 187, 123, 0.14), transparent 58%),
+    linear-gradient(170deg, #111726, #0b0f16);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.modal-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.modal-details {
+  min-width: 0;
+}
+
 .modal-title {
   margin-bottom: 0.35rem;
+  padding-right: 2.2rem;
 }
 
 .modal-subtitle {
@@ -751,6 +831,15 @@ h1 {
 
   .hero-panel {
     min-height: 190px;
+  }
+
+  .modal-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-cover {
+    width: min(260px, 100%);
+    justify-self: center;
   }
 
   .footer-inner {
