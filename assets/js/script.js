@@ -33,6 +33,48 @@ function getCardCoverArt(game) {
   return "";
 }
 
+function getModalCoverArt(game) {
+  if (isPresent(game.cover_art_portrait)) return game.cover_art_portrait;
+  if (isPresent(game.cover_art_landscape)) return game.cover_art_landscape;
+  return "";
+}
+
+function noCoverMarkup(variant, title) {
+  const label = `${title} has no cover art`;
+  return `
+    <div class="cover-placeholder cover-placeholder--${variant}" role="img" aria-label="${label}">
+      <span class="cover-placeholder__badge">No Cover</span>
+      <p>${title}</p>
+    </div>
+  `;
+}
+
+function cardCoverMarkup(game) {
+  const coverArt = getCardCoverArt(game);
+  if (!coverArt) {
+    return `<div class="cover-wrap cover-wrap--placeholder">${noCoverMarkup("card", game.title)}</div>`;
+  }
+
+  return `
+    <div class="cover-wrap">
+      <img src="${coverArt}" alt="${game.title} cover art" loading="lazy" data-cover-image="card" data-title="${game.title}" />
+    </div>
+  `;
+}
+
+function modalCoverMarkup(game) {
+  const coverArt = getModalCoverArt(game);
+  if (!coverArt) {
+    return `<div class="modal-cover modal-cover--placeholder">${noCoverMarkup("modal", game.title)}</div>`;
+  }
+
+  return `
+    <div class="modal-cover">
+      <img src="${coverArt}" alt="${game.title} cover art" loading="lazy" data-cover-image="modal" data-title="${game.title}" />
+    </div>
+  `;
+}
+
 // Schema normalization helpers
 function normalizeGame(game) {
   return {
@@ -358,9 +400,7 @@ function renderCompletedGames(games) {
     .map(
       (game) => `
       <button class="game-card" data-card-type="completed" data-id="${game.id}">
-        <div class="cover-wrap">
-          <img src="${getCardCoverArt(game)}" alt="${game.title} cover art" loading="lazy" />
-        </div>
+        ${cardCoverMarkup(game)}
         <div class="card-content">
           <div class="card-title-row">
             <h3>${game.title}</h3>
@@ -394,9 +434,7 @@ function renderPlannedGames(games) {
     .map(
       (game) => `
       <button class="game-card" data-card-type="planned" data-id="${game.id}">
-        <div class="cover-wrap">
-          <img src="${getCardCoverArt(game)}" alt="${game.title} cover art" loading="lazy" />
-        </div>
+        ${cardCoverMarkup(game)}
         <div class="card-content">
           <div class="card-title-row">
             <h3>${game.title}</h3>
@@ -501,39 +539,49 @@ function completedModalMarkup(game) {
       : "";
 
   return `
-    <h3 id="modal-title" class="modal-title">${game.title}</h3>
-    <p class="modal-subtitle">${[game.platform, game.genre].filter(isPresent).join(" • ")}</p>
-    <div class="modal-grid">
-      ${modalFieldMarkup("Status", game.status)}
-      ${modalFieldMarkup("Activity", game.activity_state)}
-      ${modalFieldMarkup("Start date", game.start_date, formatDisplayDate)}
-      ${modalFieldMarkup("Finish date", game.finish_date, formatDisplayDate)}
-      ${modalFieldMarkup("Total playtime", game.playtime_hours, (hours) => `${hours}h`)}
-      ${modalFieldMarkup("Completion type", game.completion_type)}
-      ${modalFieldMarkup("DLC status", game.dlc_status)}
-      ${achievementMarkup}
-      ${modalFieldMarkup("Rating", game.rating, (rating) => `${rating} / 5`)}
-      ${modalFieldMarkup("Replayable", game.replayable, (value) => (value ? "Yes" : "No"))}
-      ${modalFieldMarkup("Notes", game.notes)}
-      ${modalFieldMarkup("Favorite memory", game.favorite_memory)}
-      ${modalFieldMarkup("Tags", game.tags, (tags) => tags.join(", "))}
+    <div class="modal-layout">
+      ${modalCoverMarkup(game)}
+      <div class="modal-details">
+        <h3 id="modal-title" class="modal-title">${game.title}</h3>
+        <p class="modal-subtitle">${[game.platform, game.genre].filter(isPresent).join(" • ")}</p>
+        <div class="modal-grid">
+          ${modalFieldMarkup("Status", game.status)}
+          ${modalFieldMarkup("Activity", game.activity_state)}
+          ${modalFieldMarkup("Start date", game.start_date, formatDisplayDate)}
+          ${modalFieldMarkup("Finish date", game.finish_date, formatDisplayDate)}
+          ${modalFieldMarkup("Total playtime", game.playtime_hours, (hours) => `${hours}h`)}
+          ${modalFieldMarkup("Completion type", game.completion_type)}
+          ${modalFieldMarkup("DLC status", game.dlc_status)}
+          ${achievementMarkup}
+          ${modalFieldMarkup("Rating", game.rating, (rating) => `${rating} / 5`)}
+          ${modalFieldMarkup("Replayable", game.replayable, (value) => (value ? "Yes" : "No"))}
+          ${modalFieldMarkup("Notes", game.notes)}
+          ${modalFieldMarkup("Favorite memory", game.favorite_memory)}
+          ${modalFieldMarkup("Tags", game.tags, (tags) => tags.join(", "))}
+        </div>
+      </div>
     </div>
   `;
 }
 
 function plannedModalMarkup(game) {
   return `
-    <h3 id="modal-title" class="modal-title">${game.title}</h3>
-    <p class="modal-subtitle">${[game.platform, game.genre].filter(isPresent).join(" • ")}</p>
-    <div class="modal-grid">
-      ${modalFieldMarkup("Status", game.status)}
-      ${modalFieldMarkup("Activity", game.activity_state)}
-      ${modalFieldMarkup("Priority", game.priority)}
-      ${modalFieldMarkup("Estimated playtime", game.playtime_hours, (hours) => `${hours}h`)}
-      ${modalFieldMarkup("Replayable", game.replayable, (value) => (value ? "Yes" : "No"))}
-      ${modalFieldMarkup("Reason to play", game.reason_to_play)}
-      ${modalFieldMarkup("Notes", game.notes)}
-      ${modalFieldMarkup("Tags", game.tags, (tags) => tags.join(", "))}
+    <div class="modal-layout">
+      ${modalCoverMarkup(game)}
+      <div class="modal-details">
+        <h3 id="modal-title" class="modal-title">${game.title}</h3>
+        <p class="modal-subtitle">${[game.platform, game.genre].filter(isPresent).join(" • ")}</p>
+        <div class="modal-grid">
+          ${modalFieldMarkup("Status", game.status)}
+          ${modalFieldMarkup("Activity", game.activity_state)}
+          ${modalFieldMarkup("Priority", game.priority)}
+          ${modalFieldMarkup("Estimated playtime", game.playtime_hours, (hours) => `${hours}h`)}
+          ${modalFieldMarkup("Replayable", game.replayable, (value) => (value ? "Yes" : "No"))}
+          ${modalFieldMarkup("Reason to play", game.reason_to_play)}
+          ${modalFieldMarkup("Notes", game.notes)}
+          ${modalFieldMarkup("Tags", game.tags, (tags) => tags.join(", "))}
+        </div>
+      </div>
     </div>
   `;
 }
@@ -576,6 +624,21 @@ function wireEventHandlers(data) {
       closeModal();
     }
   });
+
+  document.body.addEventListener("error", (event) => {
+    const image = event.target;
+    if (!(image instanceof HTMLImageElement) || !image.matches("img[data-cover-image]")) {
+      return;
+    }
+
+    const variant = image.dataset.coverImage === "modal" ? "modal" : "card";
+    const wrapperSelector = variant === "modal" ? ".modal-cover" : ".cover-wrap";
+    const wrapper = image.closest(wrapperSelector);
+    if (!wrapper) return;
+
+    wrapper.classList.add(`${wrapper.classList.contains("modal-cover") ? "modal-cover" : "cover-wrap"}--placeholder`);
+    wrapper.innerHTML = noCoverMarkup(variant, image.dataset.title || "Game");
+  }, true);
 
   modalClose.addEventListener("click", closeModal);
 

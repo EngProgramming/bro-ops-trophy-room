@@ -193,6 +193,12 @@ It is not a separate source collection.
 2. Use web-friendly formats (`.jpg`, `.png`, `.webp`, or `.svg`).
 3. Update each game's `cover_art_landscape` and/or `cover_art_portrait` values with relative paths.
 
+Presentation behavior:
+
+- Cards prefer `cover_art_landscape`, then fall back to `cover_art_portrait`, then a no-cover placeholder.
+- Modals prefer `cover_art_portrait`, then fall back to `cover_art_landscape`, then a no-cover placeholder.
+- Card and modal media use contain-style fitting in dark matte frames to reduce destructive cropping.
+
 ## Updating game entries
 
 1. Open `data/games.json`.
