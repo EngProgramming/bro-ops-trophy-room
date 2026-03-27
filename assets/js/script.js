@@ -166,6 +166,25 @@ function buildPlatformBreakdown(completed, planned) {
     .join(" • ");
 }
 
+function buildGenreSnapshot(completed, planned) {
+  const genreCounts = {};
+
+  [...completed, ...planned].forEach((item) => {
+    if (!isPresent(item.genre)) return;
+    genreCounts[item.genre] = (genreCounts[item.genre] || 0) + 1;
+  });
+
+  const sortedGenres = Object.entries(genreCounts).sort((a, b) => {
+    if (b[1] !== a[1]) return b[1] - a[1];
+    return a[0].localeCompare(b[0]);
+  });
+
+  return {
+    uniqueGenreCount: sortedGenres.length,
+    genreMix: sortedGenres.slice(0, 4).map(([genre, count]) => `${genre} (${count})`).join(" • ")
+  };
+}
+
 function calculateStats(data) {
   const completed = data.completed_games;
   const planned = data.to_play_games;
@@ -196,6 +215,8 @@ function calculateStats(data) {
     .map(([year, count]) => `${year}: ${count}`)
     .join(" • ");
 
+  const genreSnapshot = buildGenreSnapshot(completed, planned);
+
   return {
     totalCompleted,
     totalPlanned,
@@ -204,7 +225,9 @@ function calculateStats(data) {
     totalTrackedHours,
     platformBreakdown: platformBreakdown || "No platform data yet",
     averageRating,
-    yearByYear: yearByYear || "No completed runs yet"
+    yearByYear: yearByYear || "No completed runs yet",
+    uniqueGenreCount: genreSnapshot.uniqueGenreCount,
+    genreMix: genreSnapshot.genreMix || "No genre data yet"
   };
 }
 
@@ -218,6 +241,8 @@ function renderStats(stats) {
     { label: "Completed logged hours", value: `${stats.completedHours}h` },
     { label: "Planned estimated hours", value: `${stats.plannedHours}h` },
     { label: "Platforms", value: stats.platformBreakdown, compact: true, detail: true },
+    { label: "Genres represented", value: stats.uniqueGenreCount, featured: true },
+    { label: "Top genre mix", value: stats.genreMix, compact: true, detail: true },
     { label: "Year-by-year", value: stats.yearByYear, compact: true, detail: true }
   ];
 
@@ -255,10 +280,12 @@ function populateSelect(id, values, placeholder) {
 
 function setUpFilterScaffolding(data) {
   populateSelect("completed-genre", uniqueSingleValues(data.completed_games, "genre"), "All genres");
+  populateSelect("completed-setting", uniqueSingleValues(data.completed_games, "setting"), "All settings");
   populateSelect("completed-tag", uniqueValues(data.completed_games, "tags"), "All tags");
   populateSelect("completed-status", uniqueSingleValues(data.completed_games, "status"), "All status");
 
   populateSelect("planned-genre", uniqueSingleValues(data.to_play_games, "genre"), "All genres");
+  populateSelect("planned-setting", uniqueSingleValues(data.to_play_games, "setting"), "All settings");
   populateSelect("planned-tag", uniqueValues(data.to_play_games, "tags"), "All tags");
   populateSelect("planned-status", uniqueSingleValues(data.to_play_games, "status"), "All status");
 }
@@ -272,6 +299,7 @@ function sortByTitle(games, direction) {
 
 function applyCompletedFilters(games) {
   const genre = document.getElementById("completed-genre").value;
+  const setting = document.getElementById("completed-setting").value;
   const tag = document.getElementById("completed-tag").value;
   const status = document.getElementById("completed-status").value;
   const playtime = document.getElementById("completed-playtime").value;
@@ -281,6 +309,7 @@ function applyCompletedFilters(games) {
   let filtered = [...games];
 
   if (genre !== "all") filtered = filtered.filter((game) => normalizeText(game.genre) === genre);
+  if (setting !== "all") filtered = filtered.filter((game) => normalizeText(game.setting) === setting);
   if (tag !== "all") filtered = filtered.filter((game) => (game.tags || []).map(normalizeText).includes(tag));
   if (status !== "all") filtered = filtered.filter((game) => normalizeText(game.status) === status);
 
@@ -297,6 +326,7 @@ function applyCompletedFilters(games) {
 
 function applyPlannedFilters(games) {
   const genre = document.getElementById("planned-genre").value;
+  const setting = document.getElementById("planned-setting").value;
   const tag = document.getElementById("planned-tag").value;
   const status = document.getElementById("planned-status").value;
   const playtime = document.getElementById("planned-playtime").value;
@@ -306,6 +336,7 @@ function applyPlannedFilters(games) {
   let filtered = [...games];
 
   if (genre !== "all") filtered = filtered.filter((game) => normalizeText(game.genre) === genre);
+  if (setting !== "all") filtered = filtered.filter((game) => normalizeText(game.setting) === setting);
   if (tag !== "all") filtered = filtered.filter((game) => (game.tags || []).map(normalizeText).includes(tag));
   if (status !== "all") filtered = filtered.filter((game) => normalizeText(game.status) === status);
 
@@ -407,6 +438,7 @@ function renderCompletedGames(games) {
             ${isPresent(game.rating) ? `<span class="rating-chip">★ ${game.rating}</span>` : ""}
           </div>
           <dl class="card-meta">
+            <div class="meta-item meta-item--genre"><dt>Genre</dt><dd>${game.genre || "Unlisted"}</dd></div>
             <div class="meta-item"><dt>Platform</dt><dd>${game.platform || "Platform TBD"}</dd></div>
             <div class="meta-item"><dt>Finished</dt><dd>${formatCompactDate(game.finish_date)}</dd></div>
             ${isPresent(game.playtime_hours) ? `<div class="meta-item"><dt>Hours</dt><dd>${game.playtime_hours}h</dd></div>` : ""}
@@ -441,6 +473,7 @@ function renderPlannedGames(games) {
             ${isPresent(game.priority) ? `<span class="priority-chip">${game.priority} priority</span>` : ""}
           </div>
           <dl class="card-meta">
+            <div class="meta-item meta-item--genre"><dt>Genre</dt><dd>${game.genre || "Unlisted"}</dd></div>
             <div class="meta-item"><dt>Platform</dt><dd>${game.platform || "Platform TBD"}</dd></div>
             ${isPresent(game.playtime_hours) ? `<div class="meta-item"><dt>Estimated time</dt><dd>${game.playtime_hours}h</dd></div>` : ""}
             <div class="meta-item"><dt>Status</dt><dd>${game.status || "—"}</dd></div>
@@ -532,6 +565,40 @@ function modalFieldMarkup(label, value, formatter) {
   return `<div class="modal-field"><h4>${label}</h4><p>${displayValue}</p></div>`;
 }
 
+function modalLongTextMarkup(label, value) {
+  if (!isPresent(value)) {
+    return "";
+  }
+  return `
+    <article class="modal-long-text-card">
+      <h4>${label}</h4>
+      <p>${value}</p>
+    </article>
+  `;
+}
+
+function modalTaxonomyMarkup(game) {
+  const taxonomyItems = [
+    modalFieldMarkup("Genre", game.genre),
+    modalFieldMarkup("Tags", game.tags, (tags) => `<span class="modal-tag-row">${tags.map((tag) => `<span class="tag tag--modal">${tag}</span>`).join("")}</span>`),
+    modalFieldMarkup("Setting", game.setting),
+    modalFieldMarkup("Audience", game.audience),
+    modalFieldMarkup("Theme", game.theme),
+    modalFieldMarkup("Purpose", game.purpose)
+  ].filter(Boolean);
+
+  if (!taxonomyItems.length) {
+    return "";
+  }
+
+  return `
+    <section class="modal-section modal-section--taxonomy" aria-label="Taxonomy">
+      <h4 class="modal-section-title">Taxonomy</h4>
+      <div class="modal-grid modal-grid--taxonomy">${taxonomyItems.join("")}</div>
+    </section>
+  `;
+}
+
 function completedModalMarkup(game) {
   const achievementMarkup =
     game.has_achievements === true && isPresent(game.achievements_completed) && isPresent(game.achievements_total)
@@ -542,23 +609,33 @@ function completedModalMarkup(game) {
     <div class="modal-layout">
       ${modalCoverMarkup(game)}
       <div class="modal-details">
-        <h3 id="modal-title" class="modal-title">${game.title}</h3>
-        <p class="modal-subtitle">${[game.platform, game.genre].filter(isPresent).join(" • ")}</p>
-        <div class="modal-grid">
-          ${modalFieldMarkup("Status", game.status)}
-          ${modalFieldMarkup("Activity", game.activity_state)}
-          ${modalFieldMarkup("Start date", game.start_date, formatDisplayDate)}
-          ${modalFieldMarkup("Finish date", game.finish_date, formatDisplayDate)}
-          ${modalFieldMarkup("Total playtime", game.playtime_hours, (hours) => `${hours}h`)}
-          ${modalFieldMarkup("Completion type", game.completion_type)}
-          ${modalFieldMarkup("DLC status", game.dlc_status)}
-          ${achievementMarkup}
-          ${modalFieldMarkup("Rating", game.rating, (rating) => `${rating} / 5`)}
-          ${modalFieldMarkup("Replayable", game.replayable, (value) => (value ? "Yes" : "No"))}
-          ${modalFieldMarkup("Notes", game.notes)}
-          ${modalFieldMarkup("Favorite memory", game.favorite_memory)}
-          ${modalFieldMarkup("Tags", game.tags, (tags) => tags.join(", "))}
-        </div>
+        <header class="modal-header">
+          <h3 id="modal-title" class="modal-title">${game.title}</h3>
+          <p class="modal-subtitle">${[game.platform, game.status].filter(isPresent).join(" • ")}</p>
+        </header>
+
+        <section class="modal-section" aria-label="Primary metadata">
+          <div class="modal-grid modal-grid--primary">
+            ${modalFieldMarkup("Status", game.status)}
+            ${modalFieldMarkup("Activity", game.activity_state)}
+            ${modalFieldMarkup("Platform", game.platform)}
+            ${modalFieldMarkup("Start date", game.start_date, formatDisplayDate)}
+            ${modalFieldMarkup("Finish date", game.finish_date, formatDisplayDate)}
+            ${modalFieldMarkup("Playtime", game.playtime_hours, (hours) => `${hours}h`)}
+            ${modalFieldMarkup("Completion type", game.completion_type)}
+            ${modalFieldMarkup("DLC status", game.dlc_status)}
+            ${achievementMarkup}
+            ${modalFieldMarkup("Rating", game.rating, (rating) => `${rating} / 5`)}
+            ${modalFieldMarkup("Replayable", game.replayable, (value) => (value ? "Yes" : "No"))}
+          </div>
+        </section>
+
+        ${modalTaxonomyMarkup(game)}
+
+        <section class="modal-section modal-section--long-text" aria-label="Notes and memories">
+          ${modalLongTextMarkup("Notes", game.notes)}
+          ${modalLongTextMarkup("Favorite Memory", game.favorite_memory)}
+        </section>
       </div>
     </div>
   `;
@@ -569,27 +646,39 @@ function plannedModalMarkup(game) {
     <div class="modal-layout">
       ${modalCoverMarkup(game)}
       <div class="modal-details">
-        <h3 id="modal-title" class="modal-title">${game.title}</h3>
-        <p class="modal-subtitle">${[game.platform, game.genre].filter(isPresent).join(" • ")}</p>
-        <div class="modal-grid">
-          ${modalFieldMarkup("Status", game.status)}
-          ${modalFieldMarkup("Activity", game.activity_state)}
-          ${modalFieldMarkup("Priority", game.priority)}
-          ${modalFieldMarkup("Estimated playtime", game.playtime_hours, (hours) => `${hours}h`)}
-          ${modalFieldMarkup("Replayable", game.replayable, (value) => (value ? "Yes" : "No"))}
-          ${modalFieldMarkup("Reason to play", game.reason_to_play)}
-          ${modalFieldMarkup("Notes", game.notes)}
-          ${modalFieldMarkup("Tags", game.tags, (tags) => tags.join(", "))}
-        </div>
+        <header class="modal-header">
+          <h3 id="modal-title" class="modal-title">${game.title}</h3>
+          <p class="modal-subtitle">${[game.platform, game.status].filter(isPresent).join(" • ")}</p>
+        </header>
+
+        <section class="modal-section" aria-label="Primary metadata">
+          <div class="modal-grid modal-grid--primary">
+            ${modalFieldMarkup("Status", game.status)}
+            ${modalFieldMarkup("Activity", game.activity_state)}
+            ${modalFieldMarkup("Platform", game.platform)}
+            ${modalFieldMarkup("Planned start date", game.start_date, formatDisplayDate)}
+            ${modalFieldMarkup("Planned finish date", game.finish_date, formatDisplayDate)}
+            ${modalFieldMarkup("Playtime", game.playtime_hours, (hours) => `${hours}h`)}
+            ${modalFieldMarkup("Priority", game.priority)}
+            ${modalFieldMarkup("Replayable", game.replayable, (value) => (value ? "Yes" : "No"))}
+          </div>
+        </section>
+
+        ${modalTaxonomyMarkup(game)}
+
+        <section class="modal-section modal-section--long-text" aria-label="Planning notes">
+          ${modalLongTextMarkup("Reason to Play", game.reason_to_play)}
+          ${modalLongTextMarkup("Notes", game.notes)}
+        </section>
       </div>
     </div>
   `;
 }
 
 function wireEventHandlers(data) {
-  const completedControls = ["completed-genre", "completed-tag", "completed-status", "completed-playtime", "completed-rating", "completed-sort"];
+  const completedControls = ["completed-genre", "completed-setting", "completed-tag", "completed-status", "completed-playtime", "completed-rating", "completed-sort"];
 
-  const plannedControls = ["planned-genre", "planned-tag", "planned-status", "planned-playtime", "planned-priority", "planned-sort"];
+  const plannedControls = ["planned-genre", "planned-setting", "planned-tag", "planned-status", "planned-playtime", "planned-priority", "planned-sort"];
 
   completedControls.forEach((id) => {
     document.getElementById(id).addEventListener("change", () => {

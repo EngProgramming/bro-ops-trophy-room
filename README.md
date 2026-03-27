@@ -187,6 +187,13 @@ The **Currently Active** section is a derived view computed from `completed_game
 
 It is not a separate source collection.
 
+## Browse and modal behavior
+
+- Cards in both collections surface `genre` as a first-class metadata line for faster scanability.
+- Completed and to-play filters each include derived `genre`, `setting`, and `tag` controls sourced from live data values.
+- Modals use a stable structure: media, title/subtitle, primary metadata grid, taxonomy section, then dedicated long-text cards (for notes/reason/favorite memory).
+- Optional fields still omit cleanly, but section order remains consistent across entries.
+
 ## Adding cover art
 
 1. Add cover files into `assets/images/covers/`.
