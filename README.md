@@ -189,9 +189,12 @@ It is not a separate source collection.
 
 ## Browse and modal behavior
 
+- Collection Snapshot highlights `Genres Completed` using `completed_games` only, and `Top Genre Mix` is also derived from `completed_games` only.
 - Cards in both collections surface `genre` as a first-class metadata line for faster scanability.
 - Completed and to-play filters each include derived `genre`, `setting`, and `tag` controls sourced from live data values.
 - Modals use a stable structure: media, title/subtitle, primary metadata grid, taxonomy section, then dedicated long-text cards (for notes/reason/favorite memory).
+- Replayable appears as a subtle header badge when true instead of a standalone metadata box.
+- `purpose` remains in the data schema but is intentionally not surfaced in the modal taxonomy section right now.
 - Optional fields still omit cleanly, but section order remains consistent across entries.
 
 ## Adding cover art

@@ -166,10 +166,10 @@ function buildPlatformBreakdown(completed, planned) {
     .join(" • ");
 }
 
-function buildGenreSnapshot(completed, planned) {
+function buildGenreSnapshot(completed) {
   const genreCounts = {};
 
-  [...completed, ...planned].forEach((item) => {
+  completed.forEach((item) => {
     if (!isPresent(item.genre)) return;
     genreCounts[item.genre] = (genreCounts[item.genre] || 0) + 1;
   });
@@ -215,7 +215,7 @@ function calculateStats(data) {
     .map(([year, count]) => `${year}: ${count}`)
     .join(" • ");
 
-  const genreSnapshot = buildGenreSnapshot(completed, planned);
+  const genreSnapshot = buildGenreSnapshot(completed);
 
   return {
     totalCompleted,
@@ -237,11 +237,11 @@ function renderStats(stats) {
     { label: "Completed games", value: stats.totalCompleted, featured: true },
     { label: "Planned games", value: stats.totalPlanned, featured: true },
     { label: "Total tracked hours", value: `${stats.totalTrackedHours}h`, featured: true },
+    { label: "Genres completed", value: stats.uniqueGenreCount, featured: true },
     { label: "Average rating", value: stats.averageRating, featured: true },
     { label: "Completed logged hours", value: `${stats.completedHours}h` },
     { label: "Planned estimated hours", value: `${stats.plannedHours}h` },
     { label: "Platforms", value: stats.platformBreakdown, compact: true, detail: true },
-    { label: "Genres represented", value: stats.uniqueGenreCount, featured: true },
     { label: "Top genre mix", value: stats.genreMix, compact: true, detail: true },
     { label: "Year-by-year", value: stats.yearByYear, compact: true, detail: true }
   ];
@@ -580,11 +580,10 @@ function modalLongTextMarkup(label, value) {
 function modalTaxonomyMarkup(game) {
   const taxonomyItems = [
     modalFieldMarkup("Genre", game.genre),
-    modalFieldMarkup("Tags", game.tags, (tags) => `<span class="modal-tag-row">${tags.map((tag) => `<span class="tag tag--modal">${tag}</span>`).join("")}</span>`),
     modalFieldMarkup("Setting", game.setting),
     modalFieldMarkup("Audience", game.audience),
     modalFieldMarkup("Theme", game.theme),
-    modalFieldMarkup("Purpose", game.purpose)
+    modalFieldMarkup("Tags", game.tags, (tags) => `<span class="modal-tag-row">${tags.map((tag) => `<span class="tag tag--modal">${tag}</span>`).join("")}</span>`)
   ].filter(Boolean);
 
   if (!taxonomyItems.length) {
@@ -596,6 +595,29 @@ function modalTaxonomyMarkup(game) {
       <h4 class="modal-section-title">Taxonomy</h4>
       <div class="modal-grid modal-grid--taxonomy">${taxonomyItems.join("")}</div>
     </section>
+  `;
+}
+
+function modalReplayableBadgeMarkup(game) {
+  return game.replayable === true ? `<span class="modal-pill modal-pill--replayable">Replayable</span>` : "";
+}
+
+function modalRatingStarsMarkup(rating) {
+  if (!isPresent(rating)) {
+    return "";
+  }
+
+  const boundedRating = Math.max(0, Math.min(5, Number(rating)));
+  if (!Number.isFinite(boundedRating)) {
+    return "";
+  }
+
+  const starsPercent = (boundedRating / 5) * 100;
+  return `
+    <div class="rating-stars-wrap" aria-label="${boundedRating} out of 5 stars">
+      <span class="rating-stars" style="--rating-percent:${starsPercent}%;" aria-hidden="true"></span>
+      <span class="rating-stars-value">${boundedRating} / 5</span>
+    </div>
   `;
 }
 
@@ -611,7 +633,10 @@ function completedModalMarkup(game) {
       <div class="modal-details">
         <header class="modal-header">
           <h3 id="modal-title" class="modal-title">${game.title}</h3>
-          <p class="modal-subtitle">${[game.platform, game.status].filter(isPresent).join(" • ")}</p>
+          <div class="modal-subtitle-row">
+            <p class="modal-subtitle">${[game.platform, game.status].filter(isPresent).join(" • ")}</p>
+            ${modalReplayableBadgeMarkup(game)}
+          </div>
         </header>
 
         <section class="modal-section" aria-label="Primary metadata">
@@ -622,11 +647,10 @@ function completedModalMarkup(game) {
             ${modalFieldMarkup("Start date", game.start_date, formatDisplayDate)}
             ${modalFieldMarkup("Finish date", game.finish_date, formatDisplayDate)}
             ${modalFieldMarkup("Playtime", game.playtime_hours, (hours) => `${hours}h`)}
+            ${achievementMarkup}
+            ${modalFieldMarkup("Rating", game.rating, modalRatingStarsMarkup)}
             ${modalFieldMarkup("Completion type", game.completion_type)}
             ${modalFieldMarkup("DLC status", game.dlc_status)}
-            ${achievementMarkup}
-            ${modalFieldMarkup("Rating", game.rating, (rating) => `${rating} / 5`)}
-            ${modalFieldMarkup("Replayable", game.replayable, (value) => (value ? "Yes" : "No"))}
           </div>
         </section>
 
@@ -648,7 +672,10 @@ function plannedModalMarkup(game) {
       <div class="modal-details">
         <header class="modal-header">
           <h3 id="modal-title" class="modal-title">${game.title}</h3>
-          <p class="modal-subtitle">${[game.platform, game.status].filter(isPresent).join(" • ")}</p>
+          <div class="modal-subtitle-row">
+            <p class="modal-subtitle">${[game.platform, game.status].filter(isPresent).join(" • ")}</p>
+            ${modalReplayableBadgeMarkup(game)}
+          </div>
         </header>
 
         <section class="modal-section" aria-label="Primary metadata">
@@ -660,7 +687,6 @@ function plannedModalMarkup(game) {
             ${modalFieldMarkup("Planned finish date", game.finish_date, formatDisplayDate)}
             ${modalFieldMarkup("Playtime", game.playtime_hours, (hours) => `${hours}h`)}
             ${modalFieldMarkup("Priority", game.priority)}
-            ${modalFieldMarkup("Replayable", game.replayable, (value) => (value ? "Yes" : "No"))}
           </div>
         </section>
 
