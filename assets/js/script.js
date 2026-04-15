@@ -265,29 +265,109 @@ function renderStats(stats) {
 
 // Filter/sort scaffolding helpers
 function uniqueValues(collection, field) {
-  return [...new Set(collection.flatMap((item) => item[field] || []))].sort((a, b) => a.localeCompare(b));
+  return [...new Set(collection.flatMap((item) => item[field] || []).filter(isPresent))].sort((a, b) => a.localeCompare(b));
 }
 
 function uniqueSingleValues(collection, field) {
-  return [...new Set(collection.map((item) => item[field]).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  return [...new Set(collection.map((item) => item[field]).filter(isPresent))].sort((a, b) => a.localeCompare(b));
 }
 
-function populateSelect(id, values, placeholder) {
-  const select = document.getElementById(id);
+const FILTER_CONFIG = {
+  completed: {
+    controls: {
+      genre: "completed-genre",
+      setting: "completed-setting",
+      tag: "completed-tag",
+      status: "completed-status",
+      playtime: "completed-playtime",
+      rating: "completed-rating",
+      sort: "completed-sort"
+    },
+    dynamicFields: [
+      { key: "genre", field: "genre", source: "single", placeholder: "All genres" },
+      { key: "setting", field: "setting", source: "single", placeholder: "All settings" },
+      { key: "tag", field: "tags", source: "array", placeholder: "All tags" },
+      { key: "status", field: "status", source: "single", placeholder: "All status" }
+    ],
+    resetId: "completed-reset"
+  },
+  planned: {
+    controls: {
+      genre: "planned-genre",
+      setting: "planned-setting",
+      tag: "planned-tag",
+      status: "planned-status",
+      playtime: "planned-playtime",
+      priority: "planned-priority",
+      sort: "planned-sort"
+    },
+    dynamicFields: [
+      { key: "genre", field: "genre", source: "single", placeholder: "All genres" },
+      { key: "setting", field: "setting", source: "single", placeholder: "All settings" },
+      { key: "tag", field: "tags", source: "array", placeholder: "All tags" },
+      { key: "status", field: "status", source: "single", placeholder: "All status" }
+    ],
+    resetId: "planned-reset"
+  }
+};
+
+function populateSelect(select, values, placeholder, selectedValue = "all") {
   const optionMarkup = values.map((value) => `<option value="${normalizeText(value)}">${value}</option>`).join("");
   select.innerHTML = `<option value="all">${placeholder}</option>${optionMarkup}`;
+  const shouldKeepCurrent = selectedValue !== "all" && values.some((value) => normalizeText(value) === selectedValue);
+  select.value = shouldKeepCurrent ? selectedValue : "all";
+}
+
+function readControlValues(config) {
+  return Object.fromEntries(
+    Object.entries(config.controls).map(([key, id]) => [key, document.getElementById(id).value])
+  );
+}
+
+function filterGames(collection, values, mode) {
+  let filtered = [...collection];
+
+  if (values.genre !== "all") filtered = filtered.filter((game) => normalizeText(game.genre) === values.genre);
+  if (values.setting !== "all") filtered = filtered.filter((game) => normalizeText(game.setting) === values.setting);
+  if (values.tag !== "all") filtered = filtered.filter((game) => (game.tags || []).map(normalizeText).includes(values.tag));
+  if (values.status !== "all") filtered = filtered.filter((game) => normalizeText(game.status) === values.status);
+
+  if (values.playtime === "short") filtered = filtered.filter((game) => Number(game.playtime_hours) < 20);
+  if (values.playtime === "medium") {
+    filtered = filtered.filter((game) => Number(game.playtime_hours) >= 20 && Number(game.playtime_hours) <= 50);
+  }
+  if (values.playtime === "long") filtered = filtered.filter((game) => Number(game.playtime_hours) > 50);
+
+  if (mode === "completed" && values.rating !== "all") {
+    filtered = filtered.filter((game) => Number(game.rating) >= Number(values.rating));
+  }
+
+  if (mode === "planned" && values.priority !== "all") {
+    filtered = filtered.filter((game) => normalizeText(game.priority) === values.priority);
+  }
+
+  return filtered;
+}
+
+function updateDynamicSelects(collection, mode) {
+  const config = FILTER_CONFIG[mode];
+  const currentValues = readControlValues(config);
+
+  config.dynamicFields.forEach((dynamicField) => {
+    const partialValues = { ...currentValues, [dynamicField.key]: "all" };
+    const filteredForField = filterGames(collection, partialValues, mode);
+    const values =
+      dynamicField.source === "array"
+        ? uniqueValues(filteredForField, dynamicField.field)
+        : uniqueSingleValues(filteredForField, dynamicField.field);
+    const select = document.getElementById(config.controls[dynamicField.key]);
+    populateSelect(select, values, dynamicField.placeholder, currentValues[dynamicField.key]);
+  });
 }
 
 function setUpFilterScaffolding(data) {
-  populateSelect("completed-genre", uniqueSingleValues(data.completed_games, "genre"), "All genres");
-  populateSelect("completed-setting", uniqueSingleValues(data.completed_games, "setting"), "All settings");
-  populateSelect("completed-tag", uniqueValues(data.completed_games, "tags"), "All tags");
-  populateSelect("completed-status", uniqueSingleValues(data.completed_games, "status"), "All status");
-
-  populateSelect("planned-genre", uniqueSingleValues(data.to_play_games, "genre"), "All genres");
-  populateSelect("planned-setting", uniqueSingleValues(data.to_play_games, "setting"), "All settings");
-  populateSelect("planned-tag", uniqueValues(data.to_play_games, "tags"), "All tags");
-  populateSelect("planned-status", uniqueSingleValues(data.to_play_games, "status"), "All status");
+  updateDynamicSelects(data.completed_games, "completed");
+  updateDynamicSelects(data.to_play_games, "planned");
 }
 
 function sortByTitle(games, direction) {
@@ -298,57 +378,13 @@ function sortByTitle(games, direction) {
 }
 
 function applyCompletedFilters(games) {
-  const genre = document.getElementById("completed-genre").value;
-  const setting = document.getElementById("completed-setting").value;
-  const tag = document.getElementById("completed-tag").value;
-  const status = document.getElementById("completed-status").value;
-  const playtime = document.getElementById("completed-playtime").value;
-  const rating = document.getElementById("completed-rating").value;
-  const sort = document.getElementById("completed-sort").value;
-
-  let filtered = [...games];
-
-  if (genre !== "all") filtered = filtered.filter((game) => normalizeText(game.genre) === genre);
-  if (setting !== "all") filtered = filtered.filter((game) => normalizeText(game.setting) === setting);
-  if (tag !== "all") filtered = filtered.filter((game) => (game.tags || []).map(normalizeText).includes(tag));
-  if (status !== "all") filtered = filtered.filter((game) => normalizeText(game.status) === status);
-
-  if (playtime === "short") filtered = filtered.filter((game) => Number(game.playtime_hours) < 20);
-  if (playtime === "medium") {
-    filtered = filtered.filter((game) => Number(game.playtime_hours) >= 20 && Number(game.playtime_hours) <= 50);
-  }
-  if (playtime === "long") filtered = filtered.filter((game) => Number(game.playtime_hours) > 50);
-
-  if (rating !== "all") filtered = filtered.filter((game) => Number(game.rating) >= Number(rating));
-
-  return sortByTitle(filtered, sort);
+  const values = readControlValues(FILTER_CONFIG.completed);
+  return sortByTitle(filterGames(games, values, "completed"), values.sort);
 }
 
 function applyPlannedFilters(games) {
-  const genre = document.getElementById("planned-genre").value;
-  const setting = document.getElementById("planned-setting").value;
-  const tag = document.getElementById("planned-tag").value;
-  const status = document.getElementById("planned-status").value;
-  const playtime = document.getElementById("planned-playtime").value;
-  const priority = document.getElementById("planned-priority").value;
-  const sort = document.getElementById("planned-sort").value;
-
-  let filtered = [...games];
-
-  if (genre !== "all") filtered = filtered.filter((game) => normalizeText(game.genre) === genre);
-  if (setting !== "all") filtered = filtered.filter((game) => normalizeText(game.setting) === setting);
-  if (tag !== "all") filtered = filtered.filter((game) => (game.tags || []).map(normalizeText).includes(tag));
-  if (status !== "all") filtered = filtered.filter((game) => normalizeText(game.status) === status);
-
-  if (playtime === "short") filtered = filtered.filter((game) => Number(game.playtime_hours) < 20);
-  if (playtime === "medium") {
-    filtered = filtered.filter((game) => Number(game.playtime_hours) >= 20 && Number(game.playtime_hours) <= 50);
-  }
-  if (playtime === "long") filtered = filtered.filter((game) => Number(game.playtime_hours) > 50);
-
-  if (priority !== "all") filtered = filtered.filter((game) => normalizeText(game.priority) === priority);
-
-  return sortByTitle(filtered, sort);
+  const values = readControlValues(FILTER_CONFIG.planned);
+  return sortByTitle(filterGames(games, values, "planned"), values.sort);
 }
 
 // Rendering
@@ -390,30 +426,58 @@ function getActiveGames(data) {
 }
 
 function renderActiveGames(activeGames) {
-  const grid = document.getElementById("active-grid");
+  const activeRegion = document.getElementById("active-grid");
 
   if (!activeGames.length) {
-    grid.innerHTML = emptyStateMarkup(
+    activeRegion.innerHTML = emptyStateMarkup(
       "No active runs right now",
       "Set a game's optional activity_state to Currently Playing, In Rotation, or Paused to pin it here."
     );
     return;
   }
 
-  grid.innerHTML = activeGames
+  const primary = activeGames.filter((game) => game.activity_state === "Currently Playing" || game.activity_state === "In Rotation");
+  const paused = activeGames.filter((game) => game.activity_state === "Paused");
+
+  const primaryMarkup = primary
     .map(
       (game) => `
       <button class="active-card" type="button" data-card-type="${game.sourceType}" data-id="${game.id}">
-        <div class="active-card-header">
-          <h3>${game.title}</h3>
-          <span class="active-source-chip">${game.source}</span>
-        </div>
+        <h3>${game.title}</h3>
         <p class="active-meta">${game.platformLabel} • ${game.genre}</p>
         <p class="active-state">${game.activity_state}</p>
       </button>
     `
     )
     .join("");
+
+  const pausedMarkup = paused
+    .map(
+      (game) => `
+      <button class="active-card active-card--paused" type="button" data-card-type="${game.sourceType}" data-id="${game.id}">
+        <h3>${game.title}</h3>
+        <p class="active-meta">${game.genre || "Unlisted"}</p>
+        <p class="active-state">Paused</p>
+      </button>
+    `
+    )
+    .join("");
+
+  activeRegion.innerHTML = `
+    <div class="active-primary-grid">
+      ${primaryMarkup || emptyStateMarkup("No primary active runs", "No games are currently marked as Currently Playing or In Rotation.")}
+    </div>
+    ${
+      paused.length
+        ? `
+      <div class="active-paused-block" aria-label="Paused runs">
+        <p class="active-paused-label">Paused</p>
+        <div class="active-paused-grid">${pausedMarkup}</div>
+      </div>
+    `
+        : ""
+    }
+  `;
 }
 
 function renderCompletedGames(games) {
@@ -470,7 +534,7 @@ function renderPlannedGames(games) {
         <div class="card-content">
           <div class="card-title-row">
             <h3>${game.title}</h3>
-            ${isPresent(game.priority) ? `<span class="priority-chip">${game.priority} priority</span>` : ""}
+            ${isPresent(game.priority) ? `<span class="priority-chip">${game.priority}</span>` : ""}
           </div>
           <dl class="card-meta">
             <div class="meta-item meta-item--genre"><dt>Genre</dt><dd>${game.genre || "Unlisted"}</dd></div>
@@ -706,16 +770,42 @@ function wireEventHandlers(data) {
 
   const plannedControls = ["planned-genre", "planned-setting", "planned-tag", "planned-status", "planned-playtime", "planned-priority", "planned-sort"];
 
+  function renderCompletedFromControls() {
+    updateDynamicSelects(data.completed_games, "completed");
+    renderCompletedGames(applyCompletedFilters(data.completed_games));
+  }
+
+  function renderPlannedFromControls() {
+    updateDynamicSelects(data.to_play_games, "planned");
+    renderPlannedGames(applyPlannedFilters(data.to_play_games));
+  }
+
   completedControls.forEach((id) => {
     document.getElementById(id).addEventListener("change", () => {
-      renderCompletedGames(applyCompletedFilters(data.completed_games));
+      renderCompletedFromControls();
     });
   });
 
   plannedControls.forEach((id) => {
     document.getElementById(id).addEventListener("change", () => {
-      renderPlannedGames(applyPlannedFilters(data.to_play_games));
+      renderPlannedFromControls();
     });
+  });
+
+  document.getElementById(FILTER_CONFIG.completed.resetId).addEventListener("click", () => {
+    completedControls.forEach((id) => {
+      document.getElementById(id).value = "all";
+    });
+    document.getElementById("completed-sort").value = "alpha-asc";
+    renderCompletedFromControls();
+  });
+
+  document.getElementById(FILTER_CONFIG.planned.resetId).addEventListener("click", () => {
+    plannedControls.forEach((id) => {
+      document.getElementById(id).value = "all";
+    });
+    document.getElementById("planned-sort").value = "alpha-asc";
+    renderPlannedFromControls();
   });
 
   document.body.addEventListener("click", (event) => {
@@ -780,8 +870,8 @@ async function initializeSite() {
 
     setUpFilterScaffolding(data);
     renderActiveGames(getActiveGames(data));
-    renderCompletedGames(data.completed_games);
-    renderPlannedGames(data.to_play_games);
+    renderCompletedGames(applyCompletedFilters(data.completed_games));
+    renderPlannedGames(applyPlannedFilters(data.to_play_games));
 
     wireEventHandlers(data);
   } catch (error) {

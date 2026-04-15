@@ -187,11 +187,17 @@ The **Currently Active** section is a derived view computed from `completed_game
 
 It is not a separate source collection.
 
+- `Currently Playing` and `In Rotation` render as the primary active row.
+- `Paused` entries render in a secondary compact row that still opens the same full modal on click.
+
 ## Browse and modal behavior
 
 - Collection Snapshot highlights `Genres Completed` using `completed_games` only, and `Top Genre Mix` is also derived from `completed_games` only.
 - Cards in both collections surface `genre` as a first-class metadata line for faster scanability.
 - Completed and to-play filters each include derived `genre`, `setting`, and `tag` controls sourced from live data values.
+- Filter options cascade within each collection based on the other currently selected filters.
+- Each collection includes a `Reset` control that restores default filter/sort selections.
+- Both collections render in the default sort order shown in each section's sort control on initial page load (A → Z by default).
 - Modals use a stable structure: media, title/subtitle, primary metadata grid, taxonomy section, then dedicated long-text cards (for notes/reason/favorite memory).
 - Replayable appears as a subtle header badge when true instead of a standalone metadata box.
 - `purpose` remains in the data schema but is intentionally not surfaced in the modal taxonomy section right now.
